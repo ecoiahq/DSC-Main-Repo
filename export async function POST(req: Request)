@@ -1,0 +1,30 @@
+export async function POST(req: Request) {
+  console.log("Sanity webhook received"); // Add this line
+  const body = await req.json();
+  console.log("Request body:", body);
+
+  // Check for the existence of the required fields
+  if (!body._id || !body._type) {
+    return new Response("Missing fields", { status: 400 });
+  }
+
+  // Handle the webhook payload
+  switch (body._type) {
+    case "post": {
+      // Upsert the post into the database
+      await upsertPost(body);
+      break;
+    }
+    case "category": {
+      // Upsert the category into the database
+      await upsertCategory(body);
+      break;
+    }
+    // Add more cases as needed for other document types
+    default: {
+      console.warn("Unhandled document type:", body._type);
+    }
+  }
+
+  return new Response("Webhook handled", { status: 200 });
+}

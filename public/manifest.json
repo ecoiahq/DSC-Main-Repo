@@ -1,0 +1,16 @@
+{
+  "name": "Disability Sports Channel",
+  "short_name": "DSC",
+  "description": "The leading platform for para sports content, news, and entertainment",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#14b8a6",
+  "icons": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

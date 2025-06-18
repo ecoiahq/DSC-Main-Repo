@@ -1,0 +1,4 @@
+*[_type == "post"]{
+  title,
+  image
+}

@@ -1,0 +1,24 @@
+import { urlFor } from "@/lib/sanityImage"
+
+*[_type == "post"]{
+  title,
+  image{
+    asset->{
+      _id,
+      url
+    }
+  }
+}
+
+<Image
+  src={urlFor(post.image).width(600).height(400).url()}
+  alt={post.title}
+  width={600}
+  height={400}
+/>
+
+module.exports = {
+  images: {
+    domains: ['cdn.sanity.io'],
+  },
+}
