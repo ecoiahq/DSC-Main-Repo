@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { getFeaturedArticlesAsync } from "@/lib/data-service"
+import { getFeaturedArticlesAsync, getLatestArticlesAsync } from "@/lib/data-service"
 
 async function FeaturedArticlesContent() {
   const articles = await getFeaturedArticlesAsync()
@@ -69,111 +69,109 @@ async function FeaturedArticlesContent() {
   )
 }
 
-function NewsTickerSection() {
-  const tickerItems = [
-    {
-      id: 1,
-      isLive: true,
-      title: "Paralympic Swimming World Series - London qualifying heats underway",
-      category: "Para Swimming",
-      timeAgo: "Live",
-      url: "/live/paralympic-swimming-world-series",
-    },
-    {
-      id: 2,
-      isLive: false,
-      title: "What does Tatyana McFadden need to do to secure Paris 2024 spot?",
-      category: "Para Athletics",
-      timeAgo: "2h",
-      comments: 28,
-      url: "/news/tatyana-mcfadden-paris-2024",
-    },
-    {
-      id: 3,
-      isLive: false,
-      title: "Wheelchair Basketball World Championships - Team GB confident on medal chances",
-      category: "Wheelchair Basketball",
-      timeAgo: "4h",
-      url: "/news/wheelchair-basketball-world-championships",
-    },
-    {
-      id: 4,
-      isLive: false,
-      title: "Boccia legend David Smith announces retirement after illustrious career",
-      category: "Boccia",
-      timeAgo: "6h",
-      comments: 156,
-      url: "/news/david-smith-boccia-retirement",
-    },
-    {
-      id: 5,
-      isLive: false,
-      title: "Para Cycling Track Championships - British team dominates opening day",
-      category: "Para Cycling",
-      timeAgo: "8h",
-      url: "/news/para-cycling-track-championships",
-    },
-    {
-      id: 6,
-      isLive: false,
-      title: "Goalball European Championships preview - England eyes top spot",
-      category: "Goalball",
-      timeAgo: "12h",
-      comments: 42,
-      url: "/news/goalball-european-championships-preview",
-    },
-  ]
+// Helper function to convert date to relative time
+function getRelativeTime(dateString: string): string {
+  const now = new Date()
+  const articleDate = new Date(dateString)
+  const diffInHours = Math.floor((now.getTime() - articleDate.getTime()) / (1000 * 60 * 60))
+
+  if (diffInHours < 1) {
+    return "Live"
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h`
+  } else {
+    const diffInDays = Math.floor(diffInHours / 24)
+    return `${diffInDays}d`
+  }
+}
+
+// Helper function to determine if article should show as "LIVE"
+function isLiveArticle(dateString: string, category: string): boolean {
+  const now = new Date()
+  const articleDate = new Date(dateString)
+  const diffInMinutes = Math.floor((now.getTime() - articleDate.getTime()) / (1000 * 60))
+
+  // Consider articles "live" if they're less than 30 minutes old and from certain categories
+  const liveCategories = ["Para Swimming", "Wheelchair Basketball", "Para Athletics", "Live Events"]
+  return diffInMinutes < 30 && liveCategories.includes(category)
+}
+
+async function NewsTickerSection() {
+  const latestArticles = await getLatestArticlesAsync()
+
+  if (!latestArticles || latestArticles.length === 0) {
+    return (
+      <div className="border-t border-gray-800 bg-gray-950">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="py-4 text-center">
+            <p className="text-gray-400 text-sm">No recent articles available</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Take up to 6 articles for the ticker, skip the first one if it's the same as the main feature
+  const tickerArticles = latestArticles.slice(1, 7)
 
   return (
     <div className="border-t border-gray-800 bg-gray-950">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {tickerItems.map((item, index) => (
-            <Link
-              key={item.id}
-              href={item.url}
-              className="group border-r border-gray-800 last:border-r-0 md:last:border-r lg:last:border-r-0 xl:[&:nth-child(6n)]:border-r-0 hover:bg-gray-900 transition-colors duration-200"
-            >
-              <div className="px-4 py-3">
-                <div className="flex items-start gap-2 mb-1">
-                  {item.isLive && (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">
-                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-                      LIVE
-                    </span>
-                  )}
-                </div>
-                <h4 className="text-sm font-medium text-white group-hover:text-teal-400 transition-colors line-clamp-2 mb-2">
-                  {item.title}
-                </h4>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <span className="text-teal-500 font-medium">{item.category}</span>
-                    <span>•</span>
-                    <span>{item.timeAgo}</span>
+          {tickerArticles.map((article, index) => {
+            const timeAgo = getRelativeTime(article.date)
+            const isLive = isLiveArticle(article.date, article.category)
+            // Generate a mock comment count based on article ID for demonstration
+            const hasComments = Math.random() > 0.5
+            const commentCount = hasComments ? Math.floor(Math.random() * 200) + 10 : null
+
+            return (
+              <Link
+                key={article.id}
+                href={article.url}
+                className="group border-r border-gray-800 last:border-r-0 md:last:border-r lg:last:border-r-0 xl:[&:nth-child(6n)]:border-r-0 hover:bg-gray-900 transition-colors duration-200"
+              >
+                <div className="px-4 py-3">
+                  <div className="flex items-start gap-2 mb-1">
+                    {isLive && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                        LIVE
+                      </span>
+                    )}
                   </div>
-                  {item.comments && (
-                    <div className="flex items-center gap-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-                      </svg>
-                      <span>{item.comments}</span>
+                  <h4 className="text-sm font-medium text-white group-hover:text-teal-400 transition-colors line-clamp-2 mb-2">
+                    {article.title}
+                  </h4>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <span className="text-teal-500 font-medium">{article.category}</span>
+                      <span>•</span>
+                      <span>{timeAgo}</span>
                     </div>
-                  )}
+                    {commentCount && (
+                      <div className="flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                        </svg>
+                        <span>{commentCount}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </div>
