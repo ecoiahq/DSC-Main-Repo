@@ -57,7 +57,11 @@ export default function GeminiChatSection() {
       console.log("Response data:", data)
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`)
+        throw new Error(
+          data.details
+            ? `${data.error} Details: ${data.details}`
+            : data.error || `HTTP error! status: ${response.status}`,
+        )
       }
 
       const assistantMessage: Message = {
@@ -73,7 +77,7 @@ export default function GeminiChatSection() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `Error: ${error instanceof Error ? error.message : "I'm sorry, I'm having trouble responding right now. Please try again later."}`,
+        content: `${error instanceof Error ? error.message : "I'm sorry, I'm having trouble responding right now. Please try again later."}`,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])

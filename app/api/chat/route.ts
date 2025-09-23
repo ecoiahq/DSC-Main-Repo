@@ -16,10 +16,13 @@ export async function POST(req: Request) {
       })
     }
 
+    console.log("Environment variable check:", process.env.GOOGLE_GENERATIVE_AI_API_KEY ? "Present" : "Missing")
     console.log("Calling Gemini API with messages:", messages)
 
     const result = await generateText({
-      model: google("gemini-1.5-flash"),
+      model: google("models/gemini-1.5-flash", {
+        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "AIzaSyAXbv8nYOwKPRlYEg-P1TbTwsWK5yPz_rc",
+      }),
       messages,
       system: `You are a knowledgeable assistant specializing in Paralympic sports and disability athletics. You have extensive knowledge about:
 
@@ -38,7 +41,7 @@ Provide accurate, helpful, and encouraging responses about Paralympic sports. Ke
 Always maintain a positive and inclusive tone when discussing disability sports and athletes.`,
     })
 
-    console.log("Gemini API response:", result.text)
+    console.log("Gemini API response received successfully")
 
     return new Response(JSON.stringify({ content: result.text }), {
       status: 200,
@@ -50,10 +53,12 @@ Always maintain a positive and inclusive tone when discussing disability sports 
     console.error("Error message:", error?.message)
     console.error("Error stack:", error?.stack)
 
+    // Return more specific error information for debugging
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request. There was an issue connecting to the AI service.",
         details: error?.message || "Unknown error",
+        errorType: error?.name || "Unknown",
       }),
       {
         status: 500,
