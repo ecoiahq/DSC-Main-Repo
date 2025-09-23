@@ -49,11 +49,11 @@ export default function GeminiChatSection() {
         }),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to get response")
-      }
-
       const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to get response")
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -68,7 +68,10 @@ export default function GeminiChatSection() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I'm sorry, I'm having trouble responding right now. Please try again later.",
+        content:
+          error instanceof Error
+            ? error.message
+            : "I'm sorry, I'm having trouble responding right now. Please try again later.",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -227,7 +230,7 @@ export default function GeminiChatSection() {
                   )}
                 </form>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  Powered by Google Gemini AI • Information may not always be accurate
+                  Powered by Google Gemini 2.5 Pro • Information may not always be accurate
                 </p>
               </div>
             </CardContent>

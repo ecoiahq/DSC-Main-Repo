@@ -1,12 +1,14 @@
-import { streamText } from "ai"
+import { generateText } from "ai"
 import { google } from "@ai-sdk/google"
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json()
 
-    const result = await streamText({
-      model: google("gemini-1.5-flash"),
+    const result = await generateText({
+      model: google("gemini-2.5-pro", {
+        apiKey: "AIzaSyAXbv8nYOwKPRlYEg-P1TbTwsWK5yPz_rc",
+      }),
       messages,
       system: `You are a knowledgeable assistant specializing in Paralympic sports and disability athletics. You have extensive knowledge about:
 
@@ -25,12 +27,20 @@ Provide accurate, helpful, and encouraging responses about Paralympic sports. Ke
 Always maintain a positive and inclusive tone when discussing disability sports and athletes.`,
     })
 
-    return result.toDataStreamResponse()
-  } catch (error) {
-    console.error("Chat API Error:", error)
-    return new Response(JSON.stringify({ error: "Failed to process chat request" }), {
-      status: 500,
+    return new Response(JSON.stringify({ content: result.text }), {
+      status: 200,
       headers: { "Content-Type": "application/json" },
     })
+  } catch (error) {
+    console.error("Chat API Error:", error)
+    return new Response(
+      JSON.stringify({
+        error: "Failed to process chat request. There was an issue connecting to the AI service.",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
   }
 }
