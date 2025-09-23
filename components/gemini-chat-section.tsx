@@ -36,6 +36,8 @@ export default function GeminiChatSection() {
     setIsLoading(true)
 
     try {
+      console.log("Sending request to /api/chat")
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -49,10 +51,13 @@ export default function GeminiChatSection() {
         }),
       })
 
+      console.log("Response status:", response.status)
+
       const data = await response.json()
+      console.log("Response data:", data)
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to get response")
+        throw new Error(data.error || `HTTP error! status: ${response.status}`)
       }
 
       const assistantMessage: Message = {
@@ -64,14 +69,11 @@ export default function GeminiChatSection() {
 
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
-      console.error("Error:", error)
+      console.error("Frontend error:", error)
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content:
-          error instanceof Error
-            ? error.message
-            : "I'm sorry, I'm having trouble responding right now. Please try again later.",
+        content: `Error: ${error instanceof Error ? error.message : "I'm sorry, I'm having trouble responding right now. Please try again later."}`,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -230,7 +232,7 @@ export default function GeminiChatSection() {
                   )}
                 </form>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  Powered by Google Gemini 2.5 Pro • Information may not always be accurate
+                  Powered by Google Gemini 1.5 Flash • Information may not always be accurate
                 </p>
               </div>
             </CardContent>

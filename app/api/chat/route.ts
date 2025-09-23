@@ -3,12 +3,23 @@ import { google } from "@ai-sdk/google"
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json()
+    const body = await req.json()
+    console.log("Request body:", body)
+
+    const { messages } = body
+
+    if (!messages || !Array.isArray(messages)) {
+      console.error("Invalid messages format:", messages)
+      return new Response(JSON.stringify({ error: "Invalid messages format" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    console.log("Calling Gemini API with messages:", messages)
 
     const result = await generateText({
-      model: google("gemini-1.5-flash", {
-        apiKey: "AIzaSyAXbv8nYOwKPRlYEg-P1TbTwsWK5yPz_rc",
-      }),
+      model: google("gemini-1.5-flash"),
       messages,
       system: `You are a knowledgeable assistant specializing in Paralympic sports and disability athletics. You have extensive knowledge about:
 
@@ -27,15 +38,22 @@ Provide accurate, helpful, and encouraging responses about Paralympic sports. Ke
 Always maintain a positive and inclusive tone when discussing disability sports and athletes.`,
     })
 
+    console.log("Gemini API response:", result.text)
+
     return new Response(JSON.stringify({ content: result.text }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     })
   } catch (error) {
-    console.error("Chat API Error:", error)
+    console.error("Detailed Chat API Error:", error)
+    console.error("Error name:", error?.name)
+    console.error("Error message:", error?.message)
+    console.error("Error stack:", error?.stack)
+
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request. There was an issue connecting to the AI service.",
+        details: error?.message || "Unknown error",
       }),
       {
         status: 500,
