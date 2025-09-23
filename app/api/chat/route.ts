@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json()
 
     const result = await generateText({
-      model: google("gemini-2.5-pro", {
+      model: google("gemini-1.5-flash", {
         apiKey: "AIzaSyAXbv8nYOwKPRlYEg-P1TbTwsWK5yPz_rc",
       }),
       messages,
