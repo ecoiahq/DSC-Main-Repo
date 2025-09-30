@@ -19,8 +19,9 @@ export async function POST(req: Request) {
     console.log("Environment variable check:", process.env.GOOGLE_GENERATIVE_AI_API_KEY ? "Present" : "Missing")
     console.log("Calling Gemini API with messages:", messages)
 
+    // Try without the "models/" prefix - this is the correct format for AI SDK
     const result = await generateText({
-      model: google("models/gemini-1.5-flash", {
+      model: google("gemini-1.5-flash", {
         apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "AIzaSyAXbv8nYOwKPRlYEg-P1TbTwsWK5yPz_rc",
       }),
       messages,
