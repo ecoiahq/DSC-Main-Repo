@@ -53,8 +53,13 @@ function transformSanityPost(sanityPost: any): Article {
     }
   }
 
-  // Enhanced category handling - try multiple approaches
+  // Enhanced category handling - FIXED to properly read Sanity categories
   let categoryDisplay = "News"
+
+  console.log("🏷️ Processing category:", {
+    category: sanityPost.category,
+    categoryExpanded: sanityPost.categoryExpanded,
+  })
 
   // Method 1: Check categoryExpanded (from our enhanced query)
   if (sanityPost.categoryExpanded?.title) {
@@ -81,7 +86,7 @@ function transformSanityPost(sanityPost: any): Article {
     categoryDisplay = sanityPost.category
     console.log("✅ Using category string:", categoryDisplay)
   } else {
-    console.log("❌ No category found, using default. Available data:", {
+    console.log("⚠️ No category found, using default. Available data:", {
       category: sanityPost.category,
       categoryExpanded: sanityPost.categoryExpanded,
     })

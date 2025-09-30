@@ -1,14 +1,18 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Send, Bot, User } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Send, Bot, User, Loader2 } from "lucide-react"
 
 interface Message {
+  id: string
   role: "user" | "assistant"
   content: string
+  timestamp: Date
 }
 
 export default function GeminiChatSection() {
@@ -16,48 +20,65 @@ export default function GeminiChatSection() {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const suggestedQuestions = [
-    "What are the different Paralympic sports?",
-    "Tell me about wheelchair basketball rules",
-    "When are the next Paralympic Games?",
-    "What is adaptive sports equipment?",
-  ]
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
 
-  const handleSubmit = async (question?: string) => {
-    const messageToSend = question || input
-    if (!messageToSend.trim()) return
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    }
 
-    const userMessage: Message = { role: "user", content: messageToSend }
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
 
     try {
+      console.log("Sending request to /api/chat")
+
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSend }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
       })
 
-      const data = await response.json()
+      console.log("Response status:", response.status)
 
-      if (response.ok) {
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: data.response,
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-      } else {
-        const errorMessage: Message = {
-          role: "assistant",
-          content: `Error: ${data.error || "Failed to get response"}. ${data.details || ""}`,
-        }
-        setMessages((prev) => [...prev, errorMessage])
+      const data = await response.json()
+      console.log("Response data:", data)
+
+      if (!response.ok) {
+        throw new Error(
+          data.details
+            ? `${data.error} Details: ${data.details}`
+            : data.error || `HTTP error! status: ${response.status}`,
+        )
       }
-    } catch (error: any) {
-      const errorMessage: Message = {
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `Failed to process chat request. There was an issue connecting to the AI service. Details: ${error.message}`,
+        content: data.content,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("Frontend error:", error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Error: ${error instanceof Error ? error.message : "I'm sorry, I'm having trouble responding right now. Please try again later."}`,
+        timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
     } finally {
@@ -65,91 +86,158 @@ export default function GeminiChatSection() {
     }
   }
 
-  return (
-    <section className="py-16 bg-gray-900">
-      <div className="container px-4 md:px-6">
-        <div className="max-w-4xl mx-auto">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-white flex items-center gap-2">
-                <Bot className="h-6 w-6 text-teal-500" />
-                Ask Gemini Pro About Disability Sports
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Get instant answers about Paralympic sports, adaptive equipment, and more
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Suggested Questions */}
-              {messages.length === 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-400">Try asking:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {suggestedQuestions.map((question, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        className="justify-start text-left h-auto py-2 px-3 text-sm border-gray-600 hover:bg-gray-700 text-gray-300 bg-transparent"
-                        onClick={() => handleSubmit(question)}
-                      >
-                        {question}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
+  const clearChat = () => {
+    setMessages([])
+  }
 
-              {/* Messages */}
-              <div className="space-y-4 min-h-[200px] max-h-[400px] overflow-y-auto">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    {message.role === "assistant" && <Bot className="h-6 w-6 text-teal-500 flex-shrink-0 mt-1" />}
-                    <div
-                      className={`rounded-lg p-3 max-w-[80%] ${
-                        message.role === "user" ? "bg-teal-600 text-white" : "bg-gray-700 text-gray-100"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+  return (
+    <section className="w-full bg-gradient-to-b from-black to-gray-900 py-16 border-b border-gray-800">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-white">Ask Anything About Paralympic Sports</h2>
+            </div>
+            <p className="text-gray-300 text-lg">
+              Get instant answers about Paralympic sports, athletes, events, and more with AI-powered assistance
+            </p>
+          </div>
+
+          {/* Chat Container */}
+          <Card className="bg-gray-900/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-0">
+              {/* Messages Area */}
+              <div className="h-96 overflow-y-auto p-6 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <Bot className="h-12 w-12 text-gray-500 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-300 mb-2">
+                      Welcome to Paralympic Sports AI Assistant
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                      Ask me anything about Paralympic sports, athletes, classifications, or upcoming events!
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
+                      <Button
+                        variant="outline"
+                        className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 justify-start"
+                        onClick={() => setInput("What are the different Paralympic sport classifications?")}
+                      >
+                        What are Paralympic classifications?
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 justify-start"
+                        onClick={() => setInput("Tell me about wheelchair basketball rules")}
+                      >
+                        Wheelchair basketball rules
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 justify-start"
+                        onClick={() => setInput("Who are the top Paralympic swimmers?")}
+                      >
+                        Top Paralympic swimmers
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 justify-start"
+                        onClick={() => setInput("When is the next Paralympic Games?")}
+                      >
+                        Next Paralympic Games
+                      </Button>
                     </div>
-                    {message.role === "user" && <User className="h-6 w-6 text-teal-500 flex-shrink-0 mt-1" />}
                   </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-3 justify-start">
-                    <Bot className="h-6 w-6 text-teal-500 flex-shrink-0 mt-1" />
-                    <div className="bg-gray-700 rounded-lg p-3">
-                      <p className="text-sm text-gray-100">Thinking...</p>
-                    </div>
-                  </div>
+                ) : (
+                  <>
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        {message.role === "assistant" && (
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                              <Bot className="h-4 w-4 text-white" />
+                            </div>
+                          </div>
+                        )}
+                        <div
+                          className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                            message.role === "user" ? "bg-teal-600 text-white" : "bg-gray-800 text-gray-100"
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed">{message.content}</p>
+                          <p className="text-xs opacity-70 mt-1">
+                            {message.timestamp.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                        {message.role === "user" && (
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center">
+                              <User className="h-4 w-4 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {isLoading && (
+                      <div className="flex gap-3 justify-start">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                            <Bot className="h-4 w-4 text-white" />
+                          </div>
+                        </div>
+                        <div className="bg-gray-800 text-gray-100 rounded-lg px-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">Thinking...</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* Input */}
-              <div className="flex gap-2">
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSubmit()
-                    }
-                  }}
-                  placeholder="Ask a question about disability sports..."
-                  className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 resize-none"
-                  rows={2}
-                  disabled={isLoading}
-                />
-                <Button
-                  onClick={() => handleSubmit()}
-                  disabled={!input.trim() || isLoading}
-                  className="bg-teal-600 hover:bg-teal-700 text-white"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+              {/* Input Area */}
+              <div className="border-t border-gray-700 p-4">
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask about Paralympic sports, athletes, events..."
+                    className="flex-1 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus-visible:ring-teal-500"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!input.trim() || isLoading}
+                    className="bg-teal-600 hover:bg-teal-500 text-white px-4"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                  {messages.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={clearChat}
+                      className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </form>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Powered by Google Gemini Pro • Information may not always be accurate
+                </p>
               </div>
             </CardContent>
           </Card>

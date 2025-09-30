@@ -119,7 +119,11 @@ export const ALL_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
     crop
   },
   body,
-  featured
+  featured,
+  category->{
+    title,
+    slug
+  }
 }`
 
 export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | order(publishedAt desc) [0...2] {
@@ -143,7 +147,11 @@ export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | or
     crop
   },
   body,
-  featured
+  featured,
+  category->{
+    title,
+    slug
+  }
 }`
 
 export const LATEST_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) [0...6] {
@@ -167,7 +175,11 @@ export const LATEST_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) 
     crop
   },
   body,
-  featured
+  featured,
+  category->{
+    title,
+    slug
+  }
 }`
 
 export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0] {
@@ -191,7 +203,11 @@ export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0
     crop
   },
   body,
-  featured
+  featured,
+  category->{
+    title,
+    slug
+  }
 }`
 
 // GROQ queries for Articles (backward compatibility)
@@ -327,7 +343,7 @@ export const ARTICLE_BY_SLUG_QUERY = `*[_type == "article" && slug.current == $s
   }
 }`
 
-// Combined queries that check both post and article types
+// Combined queries that check both post and article types - WITH CATEGORY
 export const COMBINED_FEATURED_QUERY = `*[(_type == "post" || _type == "article") && featured == true] | order(publishedAt desc) [0...2] {
   _id,
   _type,
@@ -352,7 +368,7 @@ export const COMBINED_FEATURED_QUERY = `*[(_type == "post" || _type == "article"
     crop
   },
   "author": select(_type == "article" => author->{name, slug}, null),
-  "category": select(_type == "article" => category->{title, slug}, null),
+  "category": category->{title, slug},
   "sportTags": select(_type == "article" => sportTags, [])
 }`
 
@@ -380,7 +396,7 @@ export const COMBINED_LATEST_QUERY = `*[_type == "post" || _type == "article"] |
     crop
   },
   "author": select(_type == "article" => author->{name, slug}, null),
-  "category": select(_type == "article" => category->{title, slug}, null),
+  "category": category->{title, slug},
   "sportTags": select(_type == "article" => sportTags, [])
 }`
 
@@ -470,6 +486,10 @@ export async function testSanityConnection() {
           _id,
           url
         }
+      },
+      category->{
+        title,
+        slug
       }
     }`)
 
