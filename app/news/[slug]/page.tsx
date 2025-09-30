@@ -540,7 +540,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   {article.category?.title}
                 </div>
                 <h1 className="mb-4 text-3xl font-bold md:text-4xl lg:text-5xl">{article.title}</h1>
-                <p className="mb-6 text-xl text-gray-300">{article.excerpt}</p>
                 <div className="flex flex-wrap items-center gap-6 text-sm text-gray-400">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
