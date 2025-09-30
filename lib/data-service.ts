@@ -53,43 +53,38 @@ function transformSanityPost(sanityPost: any): Article {
     }
   }
 
-  // Enhanced category handling - FIXED to properly read Sanity categories
+  // FIXED: Enhanced category handling with more robust checking
   let categoryDisplay = "News"
 
-  console.log("🏷️ Processing category:", {
-    category: sanityPost.category,
-    categoryExpanded: sanityPost.categoryExpanded,
-  })
+  console.log("🏷️ Category DEBUG - Full category object:", JSON.stringify(sanityPost.category, null, 2))
+  console.log("🏷️ Category DEBUG - CategoryExpanded:", JSON.stringify(sanityPost.categoryExpanded, null, 2))
 
-  // Method 1: Check categoryExpanded (from our enhanced query)
-  if (sanityPost.categoryExpanded?.title) {
-    categoryDisplay = sanityPost.categoryExpanded.title
-    console.log("✅ Using categoryExpanded.title:", categoryDisplay)
+  // First try categoryExpanded which should have the full object from the query
+  if (sanityPost.categoryExpanded) {
+    if (sanityPost.categoryExpanded.title) {
+      categoryDisplay = sanityPost.categoryExpanded.title
+      console.log("✅ Using categoryExpanded.title:", categoryDisplay)
+    } else if (sanityPost.categoryExpanded.name) {
+      categoryDisplay = sanityPost.categoryExpanded.name
+      console.log("✅ Using categoryExpanded.name:", categoryDisplay)
+    }
   }
-  // Method 2: Check categoryExpanded.name
-  else if (sanityPost.categoryExpanded?.name) {
-    categoryDisplay = sanityPost.categoryExpanded.name
-    console.log("✅ Using categoryExpanded.name:", categoryDisplay)
-  }
-  // Method 3: Check direct category.title
-  else if (sanityPost.category?.title) {
-    categoryDisplay = sanityPost.category.title
-    console.log("✅ Using category.title:", categoryDisplay)
-  }
-  // Method 4: Check direct category.name
-  else if (sanityPost.category?.name) {
-    categoryDisplay = sanityPost.category.name
-    console.log("✅ Using category.name:", categoryDisplay)
-  }
-  // Method 5: Check if category is a string
-  else if (typeof sanityPost.category === "string") {
-    categoryDisplay = sanityPost.category
-    console.log("✅ Using category string:", categoryDisplay)
+  // If categoryExpanded didn't work, try the category field directly
+  else if (sanityPost.category) {
+    if (typeof sanityPost.category === "string") {
+      categoryDisplay = sanityPost.category
+      console.log("✅ Category is string:", categoryDisplay)
+    } else if (sanityPost.category.title) {
+      categoryDisplay = sanityPost.category.title
+      console.log("✅ Using category.title:", categoryDisplay)
+    } else if (sanityPost.category.name) {
+      categoryDisplay = sanityPost.category.name
+      console.log("✅ Using category.name:", categoryDisplay)
+    } else if (sanityPost.category._ref) {
+      console.warn("⚠️ Category is a reference but not expanded:", sanityPost.category._ref)
+    }
   } else {
-    console.log("⚠️ No category found, using default. Available data:", {
-      category: sanityPost.category,
-      categoryExpanded: sanityPost.categoryExpanded,
-    })
+    console.log("⚠️ No category found at all, using default: News")
   }
 
   // Enhanced sport tags handling
@@ -190,7 +185,7 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
   try {
     console.log("🔍 Fetching articles from Sanity with enhanced category detection...")
 
-    // Try both article and post types with comprehensive category queries
+    // ENHANCED QUERY: Fetch category data in multiple ways to ensure we get it
     const query = `*[_type == "article" || _type == "post"] | order(publishedAt desc) [0...5] {
       _id,
       _type,
@@ -202,7 +197,7 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
         name,
         _id
       },
-      category,
+      "category": category,
       "categoryExpanded": category->{
         _id,
         _type,
@@ -260,13 +255,14 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
 
     console.log("📊 Raw Sanity response:", {
       count: posts?.length || 0,
-      posts: posts?.map((p: any) => ({
-        title: p.title,
-        type: p._type,
-        publishedAt: p.publishedAt,
-        category: p.category,
-        categoryExpanded: p.categoryExpanded,
-      })),
+      firstPostDebug: posts?.[0]
+        ? {
+            title: posts[0].title,
+            type: posts[0]._type,
+            category: posts[0].category,
+            categoryExpanded: posts[0].categoryExpanded,
+          }
+        : "No posts",
     })
 
     if (posts && posts.length > 0) {
