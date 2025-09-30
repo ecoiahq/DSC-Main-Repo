@@ -8,6 +8,7 @@ function transformSanityPost(sanityPost: any): Article {
   console.log("🔄 Transforming post:", {
     title: sanityPost.title,
     type: sanityPost._type,
+    publishedAt: sanityPost.publishedAt,
     categoryRaw: sanityPost.category,
     categoryExpanded: sanityPost.categoryExpanded,
   })
@@ -92,16 +93,35 @@ function transformSanityPost(sanityPost: any): Article {
     sportTags = sanityPost.sportTags.filter((tag) => tag && typeof tag === "string")
   }
 
+  // Enhanced date handling with validation
+  let formattedDate = "Recently"
+  try {
+    if (sanityPost.publishedAt) {
+      const publishDate = new Date(sanityPost.publishedAt)
+      // Check if date is valid
+      if (!isNaN(publishDate.getTime())) {
+        formattedDate = publishDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+        console.log("✅ Formatted date:", formattedDate, "from:", sanityPost.publishedAt)
+      } else {
+        console.warn("⚠️ Invalid date:", sanityPost.publishedAt)
+      }
+    } else {
+      console.warn("⚠️ No publishedAt date for:", sanityPost.title)
+    }
+  } catch (error) {
+    console.error("❌ Error formatting date:", error, "for:", sanityPost.publishedAt)
+  }
+
   const result = {
     id: sanityPost._id,
     title: sanityPost.title,
     excerpt: excerpt,
     image: imageUrl,
-    date: new Date(sanityPost.publishedAt).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
+    date: formattedDate,
     author: sanityPost.author?.name || "Admin",
     category: categoryDisplay,
     url: `/news/${cleanSlug}`,
@@ -111,6 +131,7 @@ function transformSanityPost(sanityPost: any): Article {
   console.log("✅ Final transformed article:", {
     title: result.title,
     category: result.category,
+    date: result.date,
     url: result.url,
   })
 
@@ -237,6 +258,7 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
       posts: posts?.map((p: any) => ({
         title: p.title,
         type: p._type,
+        publishedAt: p.publishedAt,
         category: p.category,
         categoryExpanded: p.categoryExpanded,
       })),

@@ -53,7 +53,6 @@ Always maintain a positive and inclusive tone when discussing disability sports 
     console.error("Error message:", error?.message)
     console.error("Error stack:", error?.stack)
 
-    // Return more specific error information for debugging
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request. There was an issue connecting to the AI service.",
