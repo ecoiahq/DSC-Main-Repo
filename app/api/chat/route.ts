@@ -1,72 +1,65 @@
-import { generateText } from "ai"
 import { google } from "@ai-sdk/google"
+import { generateText } from "ai"
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    console.log("📨 Request body:", body)
+    console.log("🤖 Chat API called")
 
-    const { messages } = body
+    const { message } = await req.json()
+    console.log("📩 Received message:", message)
 
-    if (!messages || !Array.isArray(messages)) {
-      console.error("❌ Invalid messages format:", messages)
-      return new Response(JSON.stringify({ error: "Invalid messages format" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      })
+    if (!message) {
+      console.log("❌ No message provided")
+      return Response.json({ error: "Message is required" }, { status: 400 })
     }
 
+    // Check for API key
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "AIzaSyAXbv8nYOwKPRlYEg-P1TbTwsWK5yPz_rc"
-    console.log("🔑 API Key check:", apiKey ? "Present" : "Missing")
-    console.log("📝 Messages count:", messages.length)
 
-    // Try gemini-pro which is more stable across API versions
-    console.log("🚀 Attempting to call Gemini API with gemini-pro model...")
+    if (!apiKey) {
+      console.log("❌ No API key found")
+      return Response.json({ error: "API key not configured" }, { status: 500 })
+    }
 
-    const result = await generateText({
-      model: google("gemini-pro", {
-        apiKey: apiKey,
-      }),
-      messages,
-      system: `You are a knowledgeable assistant specializing in Paralympic sports and disability athletics. You have extensive knowledge about:
+    console.log("✅ API key found, length:", apiKey.length)
 
-- Paralympic sports classifications and categories
-- Paralympic history and events
-- Adaptive sports equipment and techniques  
-- Paralympic athletes and their achievements
-- Upcoming Paralympic events and competitions
-- Rules and regulations for Paralympic sports
-- Training methods for Paralympic athletes
-- Accessibility in sports
-- Disability sport organizations and governance
-
-Provide accurate, helpful, and encouraging responses about Paralympic sports. Keep responses concise but informative. If you're unsure about specific current information like recent results or upcoming event dates, acknowledge this and suggest checking official Paralympic sources.
-
-Always maintain a positive and inclusive tone when discussing disability sports and athletes.`,
+    // Initialize Google AI
+    const model = google("gemini-pro", {
+      apiKey: apiKey,
     })
 
-    console.log("✅ Gemini API response received successfully")
+    console.log("🔄 Calling generateText...")
 
-    return new Response(JSON.stringify({ content: result.text }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    // Generate response
+    const result = await generateText({
+      model,
+      prompt: `You are a helpful assistant for the Disability Sports Channel website. 
+      Answer questions about disability sports, Paralympic events, adaptive sports, and related topics.
+      Be informative, respectful, and encouraging.
+      
+      User question: ${message}`,
+    })
+
+    console.log("✅ Response generated:", result.text.substring(0, 100) + "...")
+
+    return Response.json({
+      response: result.text,
+      usage: result.usage,
     })
   } catch (error: any) {
-    console.error("💥 Detailed Chat API Error:", error)
-    console.error("Error name:", error?.name)
-    console.error("Error message:", error?.message)
-    console.error("Error stack:", error?.stack)
+    console.error("💥 Chat API Error:", error)
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause,
+    })
 
-    return new Response(
-      JSON.stringify({
-        error: "Failed to process chat request. There was an issue connecting to the AI service.",
-        details: error?.message || "Unknown error",
-        errorType: error?.name || "Unknown",
-      }),
+    return Response.json(
       {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
+        error: "Failed to process chat request",
+        details: error.message,
       },
+      { status: 500 },
     )
   }
 }

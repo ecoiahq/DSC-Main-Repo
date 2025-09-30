@@ -493,11 +493,28 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound()
   }
 
-  const publishedDate = new Date(article.publishedAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
+  // Enhanced date handling with validation
+  let publishedDate = "Recently"
+  try {
+    if (article.publishedAt) {
+      const dateObj = new Date(article.publishedAt)
+      // Check if date is valid
+      if (!isNaN(dateObj.getTime())) {
+        publishedDate = dateObj.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+        console.log("✅ Article page - Formatted date:", publishedDate, "from:", article.publishedAt)
+      } else {
+        console.warn("⚠️ Article page - Invalid date:", article.publishedAt)
+      }
+    } else {
+      console.warn("⚠️ Article page - No publishedAt date for:", article.title)
+    }
+  } catch (error) {
+    console.error("❌ Article page - Error formatting date:", error, "for:", article.publishedAt)
+  }
 
   // Use the enhanced helper function to get the proper image URL
   const imageUrl = getSanityImageUrl(article.featuredImage, 1200, 675)
