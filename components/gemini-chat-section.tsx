@@ -236,7 +236,7 @@ export default function GeminiChatSection() {
                   )}
                 </form>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  Powered by Google Gemini 1.5 Flash • Information may not always be accurate
+                  Powered by Google Gemini Pro • Information may not always be accurate
                 </p>
               </div>
             </CardContent>

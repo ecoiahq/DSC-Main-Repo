@@ -20,9 +20,11 @@ export async function POST(req: Request) {
     console.log("🔑 API Key check:", apiKey ? "Present" : "Missing")
     console.log("📝 Messages count:", messages.length)
 
-    // Use gemini-1.5-flash without the models/ prefix
+    // Try gemini-pro which is more stable across API versions
+    console.log("🚀 Attempting to call Gemini API with gemini-pro model...")
+
     const result = await generateText({
-      model: google("gemini-1.5-flash", {
+      model: google("gemini-pro", {
         apiKey: apiKey,
       }),
       messages,
