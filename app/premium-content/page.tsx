@@ -325,7 +325,7 @@ export default function PremiumContentPage() {
                     <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-teal-900/50 transition-all duration-300 group">
                       <div className="relative aspect-video">
                         <Image
-                          src={`/placeholder.svg?key=d05v3&key=4eb0x&height=225&width=400&query=Paralympic documentary ${item}`}
+                          src={`/paralympic-documentary-.jpg?key=d05v3&key=4eb0x&height=225&width=400&query=Paralympic documentary ${item}`}
                           alt={`Award winning documentary ${item}`}
                           width={400}
                           height={225}
@@ -748,7 +748,10 @@ export default function PremiumContentPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" className="border-gray-700 hover:bg-gray-800 flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="border-gray-700 hover:bg-gray-800 flex items-center gap-2 bg-transparent"
+                    >
                       <Info className="h-4 w-4" /> Compare Plans
                     </Button>
                   </TooltipTrigger>
@@ -985,7 +988,7 @@ export default function PremiumContentPage() {
             <div className="flex justify-center">
               <Button
                 variant="outline"
-                className="border-gray-700 hover:bg-gray-800 text-lg px-8 py-6 rounded-full"
+                className="border-gray-700 hover:bg-gray-800 text-lg px-8 py-6 rounded-full bg-transparent"
                 asChild
               >
                 <Link href="#subscription-plans">View Plans</Link>
@@ -1158,7 +1161,7 @@ function SubscriptionCard({ tier, price, period, features, isHighlighted = false
           className={`w-full ${
             isHighlighted
               ? "bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-900/20"
-              : "bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50"
+              : "bg-white hover:bg-gray-100 text-blue-600 hover:text-blue-700 border border-gray-200"
           } rounded-full py-3 transition-all duration-300`}
           asChild
         >
@@ -1167,7 +1170,7 @@ function SubscriptionCard({ tier, price, period, features, isHighlighted = false
 
         <Button
           variant="outline"
-          className="w-full border-gray-700 hover:bg-gray-800 rounded-full py-3 flex items-center justify-center gap-2"
+          className="w-full border-gray-700 hover:bg-gray-800 rounded-full py-3 flex items-center justify-center gap-2 bg-transparent"
           asChild
         >
           <Link href={`/premium-content/preview?plan=${tier.toLowerCase()}`}>
