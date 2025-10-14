@@ -1,10 +1,56 @@
+// Data service for fetching content
 import { client } from "./sanity"
-import type { Article } from "./types"
+import imageUrlBuilder from "@sanity/image-url"
 
-// Helper function to format dates
-function formatDate(dateString: string | Date | null | undefined): string {
-  console.log("📅 formatDate - Input:", dateString, "Type:", typeof dateString)
+const builder = imageUrlBuilder(client)
 
+export function urlFor(source: any) {
+  return builder.image(source)
+}
+
+// Types
+export interface Article {
+  id: string
+  title: string
+  excerpt: string
+  image: string
+  category: string
+  date: string
+  url: string
+}
+
+export interface PodcastEpisode {
+  id: string
+  title: string
+  description: string
+  duration: string
+  date: string
+  audioUrl: string
+  image: string
+}
+
+export interface VideoContent {
+  id: string
+  title: string
+  description: string
+  thumbnail: string
+  duration: string
+  category: string
+}
+
+export interface LiveEvent {
+  id: string
+  title: string
+  description: string
+  sport: string
+  startTime: string
+  status: "live" | "upcoming" | "ended"
+  thumbnail: string
+  streamUrl?: string
+}
+
+// Format date helper
+export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) {
     console.log("📅 formatDate - No date provided, using current date")
     return new Date().toLocaleDateString("en-US", {
@@ -14,10 +60,11 @@ function formatDate(dateString: string | Date | null | undefined): string {
     })
   }
 
-  try {
-    const date = typeof dateString === "string" ? new Date(dateString) : dateString
+  console.log(`📅 formatDate - Input: ${dateString} Type: ${typeof dateString}`)
 
-    // Check if date is valid
+  try {
+    const date = new Date(dateString)
+
     if (isNaN(date.getTime())) {
       console.log("📅 formatDate - Invalid date, using current date")
       return new Date().toLocaleDateString("en-US", {
@@ -33,7 +80,7 @@ function formatDate(dateString: string | Date | null | undefined): string {
       day: "numeric",
     })
 
-    console.log("📅 formatDate - Formatted:", formatted)
+    console.log(`📅 formatDate - Formatted: ${formatted}`)
     return formatted
   } catch (error) {
     console.error("📅 formatDate - Error formatting date:", error)
@@ -45,96 +92,72 @@ function formatDate(dateString: string | Date | null | undefined): string {
   }
 }
 
-// Helper function to normalize category
-function normalizeCategory(category: any): string {
-  console.log("🏷️ Category DEBUG - Raw category:", JSON.stringify(category, null, 2))
-
-  if (!category) {
-    console.log("🏷️ Category DEBUG - No category found, defaulting to 'News'")
-    return "News"
-  }
-
-  // Handle different category structures
-  if (typeof category === "string") {
-    console.log("🏷️ Category DEBUG - Category is string:", category)
-    return category
-  }
-
-  if (category.title) {
-    console.log("🏷️ Category DEBUG - Using category.title:", category.title)
-    return category.title
-  }
-
-  if (category.name) {
-    console.log("🏷️ Category DEBUG - Using category.name:", category.name)
-    return category.name
-  }
-
-  console.log("🏷️ Category DEBUG - Unknown category structure, defaulting to 'News'")
-  return "News"
-}
-
 // Fetch featured articles
 export async function getFeaturedArticlesAsync(): Promise<Article[]> {
+  console.log("🔍 Fetching featured articles from Sanity...")
+
   try {
-    console.log("🔍 Fetching featured articles from Sanity...")
-
-    const query = `*[_type == "post" && defined(slug.current)] | order(publishedAt desc, _createdAt desc) [0...10] {
-      _id,
-      title,
-      slug,
-      excerpt,
-      publishedAt,
-      _createdAt,
-      "author": author->name,
-      mainImage,
-      "category": category,
-      "categoryExpanded": category->{
+    const posts = await client.fetch(`
+      *[_type == "post"] | order(_createdAt desc) [0...10] {
+        _id,
         title,
+        excerpt,
+        body,
         slug,
-        description
+        mainImage,
+        publishedAt,
+        _createdAt,
+        "category": category->title,
+        "categoryExpanded": category->{title, slug}
       }
-    }`
+    `)
 
-    const posts = await client.fetch(query)
-    console.log("✅ Sanity query returned:", posts?.length || 0, "posts")
+    console.log(`✅ Sanity query returned: ${posts?.length || 0} posts`)
 
     if (!posts || posts.length === 0) {
-      console.log("⚠️ No posts found, returning fallback articles")
-      return getFallbackArticles()
+      console.log("⚠️ No posts found in Sanity")
+      return []
     }
 
     const articles: Article[] = posts.map((post: any, index: number) => {
-      console.log(`\n📰 Processing article ${index + 1}:`, post.title)
+      console.log(`\n📰 Processing article ${index + 1}: ${post.title}`)
       console.log("   Raw publishedAt:", post.publishedAt)
       console.log("   Raw _createdAt:", post._createdAt)
       console.log("   Raw category:", post.category)
       console.log("   Raw categoryExpanded:", post.categoryExpanded)
 
       const dateToUse = post.publishedAt || post._createdAt
-      const formattedDate = formatDate(dateToUse)
-
       console.log("   Using date:", dateToUse)
+
+      const formattedDate = formatDate(dateToUse)
       console.log("   Formatted date:", formattedDate)
 
-      const category = normalizeCategory(post.categoryExpanded || post.category)
+      console.log("🏷️ Category DEBUG - Raw category:", post.category)
+      const category = post.category || "News"
+      console.log(`🏷️ Category DEBUG - ${post.category ? "Using category" : "No category found, defaulting to 'News'"}`)
       console.log("   Final category:", category)
+
+      let imageUrl = "/placeholder.svg"
+      if (post.mainImage) {
+        try {
+          imageUrl = urlFor(post.mainImage).width(800).height(600).url()
+        } catch (error) {
+          console.error("   Error generating image URL:", error)
+        }
+      }
 
       return {
         id: post._id,
-        title: post.title || "Untitled Article",
+        title: post.title,
         excerpt: post.excerpt || "",
-        date: formattedDate,
+        image: imageUrl,
         category: category,
-        author: post.author || "DSC Team",
-        image: post.mainImage?.asset?._ref
-          ? `https://cdn.sanity.io/images/${client.config().projectId}/${client.config().dataset}/${post.mainImage.asset._ref.replace("image-", "").replace("-jpg", ".jpg").replace("-png", ".png")}`
-          : "/placeholder.svg",
-        url: `/news/${post.slug.current}`,
+        date: formattedDate,
+        url: `/news/${post.slug?.current || post._id}`,
       }
     })
 
-    console.log("✅ Successfully processed", articles.length, "articles")
+    console.log(`✅ Successfully processed ${articles.length} articles`)
     console.log(
       "📅 Article dates:",
       articles.map((a) => ({ title: a.title, date: a.date })),
@@ -142,54 +165,93 @@ export async function getFeaturedArticlesAsync(): Promise<Article[]> {
 
     return articles
   } catch (error) {
-    console.error("❌ Error fetching featured articles:", error)
-    return getFallbackArticles()
+    console.error("❌ Error fetching articles:", error)
+    return []
   }
 }
 
 // Fetch latest articles
 export async function getLatestArticlesAsync(): Promise<Article[]> {
-  // For now, return the same as featured articles
   return getFeaturedArticlesAsync()
 }
 
-// Fetch all articles
-export async function getAllArticlesAsync(): Promise<Article[]> {
-  return getFeaturedArticlesAsync()
-}
-
-// Fallback articles if Sanity query fails
-function getFallbackArticles(): Article[] {
+// Fetch podcasts
+export async function getPodcasts(): Promise<PodcastEpisode[]> {
+  // Mock podcast data
   return [
     {
       id: "1",
-      title: "World Para Swimming Championships 2024",
-      excerpt: "Record-breaking performances highlight the championships in Manchester",
-      date: formatDate(new Date().toISOString()),
-      category: "Para Swimming",
-      author: "Sarah Johnson",
-      image: "/para-swimming-competition.png",
-      url: "/news/world-para-swimming-championships-2024",
+      title: "The Future of Para Sports",
+      description: "A deep dive into the evolution of Paralympic sports",
+      duration: "45:30",
+      date: "March 15, 2024",
+      audioUrl: "/podcasts/future-para-sports.mp3",
+      image: "/placeholder.svg?height=400&width=400",
     },
     {
       id: "2",
-      title: "Wheelchair Basketball: USA Dominates Semi-Finals",
-      excerpt: "Team USA secures spot in finals with commanding performance",
-      date: formatDate(new Date(Date.now() - 86400000).toISOString()),
-      category: "Wheelchair Basketball",
-      author: "Michael Chen",
-      image: "/wheelchair-basketball-action.png",
-      url: "/news/usa-wheelchair-basketball-semifinals",
+      title: "Athlete Spotlight: Rising Stars",
+      description: "Conversations with up-and-coming Paralympic athletes",
+      duration: "38:15",
+      date: "March 8, 2024",
+      audioUrl: "/podcasts/rising-stars.mp3",
+      image: "/placeholder.svg?height=400&width=400",
+    },
+  ]
+}
+
+// Fetch live events
+export async function getLiveEvents(): Promise<LiveEvent[]> {
+  // Mock live events data
+  return [
+    {
+      id: "1",
+      title: "Wheelchair Basketball Championship",
+      description: "USA vs Canada - Semifinal match",
+      sport: "Wheelchair Basketball",
+      startTime: new Date().toISOString(),
+      status: "live",
+      thumbnail: "/placeholder.svg?height=400&width=600",
+      streamUrl: "https://example.com/stream",
+    },
+  ]
+}
+
+// Fetch upcoming events
+export async function getUpcomingEvents(): Promise<LiveEvent[]> {
+  // Mock upcoming events data
+  return [
+    {
+      id: "2",
+      title: "Para Swimming World Cup",
+      description: "Finals - Day 3",
+      sport: "Para Swimming",
+      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      status: "upcoming",
+      thumbnail: "/placeholder.svg?height=400&width=600",
+    },
+  ]
+}
+
+// Fetch content grid
+export async function getContentGrid(): Promise<VideoContent[]> {
+  // Mock video content data
+  return [
+    {
+      id: "1",
+      title: "Highlights: Basketball Finals",
+      description: "Best moments from the championship game",
+      thumbnail: "/placeholder.svg?height=300&width=500",
+      duration: "5:30",
+      category: "Highlights",
     },
     {
-      id: "3",
-      title: "Para Athletics: New Records Set in Tokyo",
-      excerpt: "Athletes push boundaries at the International Grand Prix",
-      date: formatDate(new Date(Date.now() - 172800000).toISOString()),
-      category: "Para Athletics",
-      author: "Emma Wilson",
-      image: "/para-athletics-track.png",
-      url: "/news/para-athletics-records-tokyo",
+      id: "2",
+      title: "Training Tips: Para Athletics",
+      description: "Expert advice for aspiring athletes",
+      thumbnail: "/placeholder.svg?height=300&width=500",
+      duration: "12:45",
+      category: "Training",
     },
   ]
 }
