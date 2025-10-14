@@ -40,9 +40,20 @@ import { getLiveEvents, getUpcomingEvents } from "@/lib/data-service"
 
 export default function LivePage() {
   // Get data from our service
-  const liveEvents = getLiveEvents()
-  const upcomingEvents = getUpcomingEvents()
-  const featuredEvent = liveEvents[0] // Use the first live event as featured
+  const [liveEvents, setLiveEvents] = useState<any[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadEvents() {
+      const live = await getLiveEvents()
+      const upcoming = await getUpcomingEvents()
+      setLiveEvents(live)
+      setUpcomingEvents(upcoming)
+    }
+    loadEvents()
+  }, [])
+
+  const featuredEvent = liveEvents[0] || { viewers: "0", title: "", image: "", category: "" }
 
   // Add these media queries to handle mobile responsiveness
   const [isMobile, setIsMobile] = useState(false)
@@ -409,7 +420,7 @@ export default function LivePage() {
                             <Play className="mr-2 h-4 w-4" />
                             Watch in HD
                           </Button>
-                          <Button variant="outline" className="border-white/20 hover:bg-white/10">
+                          <Button variant="outline" className="border-white/20 hover:bg-white/10 bg-transparent">
                             <Info className="mr-2 h-4 w-4" />
                             Event Details
                           </Button>
@@ -822,7 +833,7 @@ export default function LivePage() {
                     </div>
 
                     <div className="mt-6">
-                      <Button variant="outline" className="w-full border-white/20 hover:bg-white/10">
+                      <Button variant="outline" className="w-full border-white/20 hover:bg-white/10 bg-transparent">
                         View Full Schedule
                       </Button>
                     </div>
@@ -938,7 +949,7 @@ export default function LivePage() {
             <div className="container px-4 md:px-6">
               <div className="mb-8 flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Upcoming Live Events</h2>
-                <Button variant="outline" className="border-white/20 hover:bg-white/10">
+                <Button variant="outline" className="border-white/20 hover:bg-white/10 bg-transparent">
                   View Calendar <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>

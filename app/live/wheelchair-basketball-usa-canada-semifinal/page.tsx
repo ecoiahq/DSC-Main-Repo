@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { ChevronLeft, Share2, Heart, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -5,10 +7,18 @@ import EnhancedFooter from "@/components/enhanced-footer"
 import SiteHeader from "@/components/site-header"
 import VideoPlayer from "@/components/video-player"
 import { getContentGrid } from "@/lib/data-service"
+import { useState, useEffect } from "react"
 
 export default function LiveVideoPage() {
-  // Get related content
-  const relatedContent = getContentGrid("Wheelchair Basketball")
+  const [relatedContent, setRelatedContent] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadContent() {
+      const content = await getContentGrid("Wheelchair Basketball")
+      setRelatedContent(content)
+    }
+    loadContent()
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">

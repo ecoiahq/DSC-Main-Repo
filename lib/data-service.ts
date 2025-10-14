@@ -175,6 +175,11 @@ export async function getLatestArticlesAsync(): Promise<Article[]> {
   return getFeaturedArticlesAsync()
 }
 
+// Fetch all articles (alias for featured)
+export async function getAllArticlesAsync(): Promise<Article[]> {
+  return getFeaturedArticlesAsync()
+}
+
 // Fetch podcasts
 export async function getPodcasts(): Promise<PodcastEpisode[]> {
   // Mock podcast data

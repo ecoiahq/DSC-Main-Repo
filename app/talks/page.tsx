@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Play, Clock, Calendar, Search, Filter } from "lucide-react"
@@ -14,8 +14,15 @@ import { getPodcasts } from "@/lib/data-service"
 export default function ParaSportTalksPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [talks, setTalks] = useState<any[]>([])
 
-  const talks = getPodcasts()
+  useEffect(() => {
+    async function loadPodcasts() {
+      const podcasts = await getPodcasts()
+      setTalks(podcasts)
+    }
+    loadPodcasts()
+  }, [])
 
   // Filter talks based on search and category
   const filteredTalks = talks.filter((talk) => {
@@ -62,7 +69,11 @@ export default function ParaSportTalksPage() {
                   <Play className="mr-2 h-5 w-5" />
                   Listen to Latest Episode
                 </Button>
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-black">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-white text-white hover:bg-white hover:text-black bg-transparent"
+                >
                   Subscribe to Podcast
                 </Button>
               </div>
@@ -143,7 +154,10 @@ export default function ParaSportTalksPage() {
                           Listen Now
                         </Link>
                       </Button>
-                      <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+                      <Button
+                        variant="outline"
+                        className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-transparent"
+                      >
                         Add to Playlist
                       </Button>
                     </div>
@@ -198,7 +212,7 @@ export default function ParaSportTalksPage() {
                 <p className="text-gray-400 text-lg">No episodes found matching your search criteria.</p>
                 <Button
                   variant="outline"
-                  className="mt-4"
+                  className="mt-4 bg-transparent"
                   onClick={() => {
                     setSearchQuery("")
                     setSelectedCategory("all")
