@@ -26,12 +26,6 @@ export default function ArticleCard({ article, className = "" }: ArticleCardProp
       ? article.category
       : article.category?.title || article.category?.name || "News"
 
-  console.log("🎴 ArticleCard - Rendering:", {
-    title: article.title,
-    category: categoryDisplay,
-    rawCategory: article.category,
-  })
-
   return (
     <Card
       className={`group overflow-hidden bg-gray-900 border-gray-800 hover:border-teal-600 transition-all duration-300 ${className}`}

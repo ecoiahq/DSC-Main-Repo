@@ -1,365 +1,195 @@
-import { client, getThumbnailUrl } from "@/lib/sanity-image"
-import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
+import { client } from "./sanity"
+import type { Article } from "./types"
 
-// Transform Sanity post to Article format
-function transformSanityPost(sanityPost: any): Article {
-  const cleanSlug = sanityPost.slug?.current?.trim() || ""
+// Helper function to format dates
+function formatDate(dateString: string | Date | null | undefined): string {
+  console.log("📅 formatDate - Input:", dateString, "Type:", typeof dateString)
 
-  console.log("🔄 Transforming post:", {
-    title: sanityPost.title,
-    type: sanityPost._type,
-    publishedAt: sanityPost.publishedAt,
-    categoryRaw: sanityPost.category,
-    categoryExpanded: sanityPost.categoryExpanded,
-  })
-
-  // Try multiple image field possibilities
-  let imageSource = null
-  let imageUrl = "/placeholder.svg"
-
-  // Check for image fields
-  if (sanityPost.featuredImage?.asset) {
-    imageSource = sanityPost.featuredImage
-  } else if (sanityPost.thumbnail?.asset) {
-    imageSource = sanityPost.thumbnail
-  } else if (sanityPost.image?.asset) {
-    imageSource = sanityPost.image
-  } else if (sanityPost.mainImage?.asset) {
-    imageSource = sanityPost.mainImage
+  if (!dateString) {
+    console.log("📅 formatDate - No date provided, using current date")
+    return new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
   }
 
-  // Process image URL
-  if (imageSource) {
-    if (imageSource.asset?.url) {
-      imageUrl = imageSource.asset.url
-    } else {
-      imageUrl = getThumbnailUrl(imageSource, 800, 450)
-    }
-  }
-
-  // Extract excerpt
-  let excerpt = "Read more about this story..."
-  if (sanityPost.excerpt) {
-    excerpt = sanityPost.excerpt
-  } else if (sanityPost.body && Array.isArray(sanityPost.body)) {
-    const textBlock = sanityPost.body.find(
-      (block: any) => block._type === "block" && block.children && Array.isArray(block.children),
-    )
-    if (textBlock) {
-      const textSpan = textBlock.children.find((child: any) => child._type === "span" && child.text)
-      if (textSpan && textSpan.text) {
-        excerpt = textSpan.text.substring(0, 200) + "..."
-      }
-    }
-  }
-
-  // FIXED: Enhanced category handling with more robust checking
-  let categoryDisplay = "News"
-
-  console.log("🏷️ Category DEBUG - Full category object:", JSON.stringify(sanityPost.category, null, 2))
-  console.log("🏷️ Category DEBUG - CategoryExpanded:", JSON.stringify(sanityPost.categoryExpanded, null, 2))
-
-  // First try categoryExpanded which should have the full object from the query
-  if (sanityPost.categoryExpanded) {
-    if (sanityPost.categoryExpanded.title) {
-      categoryDisplay = sanityPost.categoryExpanded.title
-      console.log("✅ Using categoryExpanded.title:", categoryDisplay)
-    } else if (sanityPost.categoryExpanded.name) {
-      categoryDisplay = sanityPost.categoryExpanded.name
-      console.log("✅ Using categoryExpanded.name:", categoryDisplay)
-    }
-  }
-  // If categoryExpanded didn't work, try the category field directly
-  else if (sanityPost.category) {
-    if (typeof sanityPost.category === "string") {
-      categoryDisplay = sanityPost.category
-      console.log("✅ Category is string:", categoryDisplay)
-    } else if (sanityPost.category.title) {
-      categoryDisplay = sanityPost.category.title
-      console.log("✅ Using category.title:", categoryDisplay)
-    } else if (sanityPost.category.name) {
-      categoryDisplay = sanityPost.category.name
-      console.log("✅ Using category.name:", categoryDisplay)
-    } else if (sanityPost.category._ref) {
-      console.warn("⚠️ Category is a reference but not expanded:", sanityPost.category._ref)
-    }
-  } else {
-    console.log("⚠️ No category found at all, using default: News")
-  }
-
-  // Enhanced sport tags handling
-  let sportTags: string[] = []
-  if (sanityPost.sportTags && Array.isArray(sanityPost.sportTags)) {
-    sportTags = sanityPost.sportTags.filter((tag) => tag && typeof tag === "string")
-  }
-
-  // Enhanced date handling with validation
-  let formattedDate = "Recently"
   try {
-    if (sanityPost.publishedAt) {
-      const publishDate = new Date(sanityPost.publishedAt)
-      // Check if date is valid
-      if (!isNaN(publishDate.getTime())) {
-        formattedDate = publishDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-        console.log("✅ Formatted date:", formattedDate, "from:", sanityPost.publishedAt)
-      } else {
-        console.warn("⚠️ Invalid date:", sanityPost.publishedAt)
-      }
-    } else {
-      console.warn("⚠️ No publishedAt date for:", sanityPost.title)
+    const date = typeof dateString === "string" ? new Date(dateString) : dateString
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.log("📅 formatDate - Invalid date, using current date")
+      return new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
     }
+
+    const formatted = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    console.log("📅 formatDate - Formatted:", formatted)
+    return formatted
   } catch (error) {
-    console.error("❌ Error formatting date:", error, "for:", sanityPost.publishedAt)
+    console.error("📅 formatDate - Error formatting date:", error)
+    return new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
   }
-
-  const result = {
-    id: sanityPost._id,
-    title: sanityPost.title,
-    excerpt: excerpt,
-    image: imageUrl,
-    date: formattedDate,
-    author: sanityPost.author?.name || "Admin",
-    category: categoryDisplay,
-    url: `/news/${cleanSlug}`,
-    sportTags: sportTags,
-  }
-
-  console.log("✅ Final transformed article:", {
-    title: result.title,
-    category: result.category,
-    date: result.date,
-    url: result.url,
-  })
-
-  return result
 }
 
-// Fallback articles function
-function getFallbackArticles(): Article[] {
-  return [
-    {
-      id: "fallback-1",
-      title: "Dan Brooke Named Chair of ParalympicsGB",
-      excerpt:
-        "Following an extensive recruitment process, Dan Brooke has been appointed as the new Chair of ParalympicsGB.",
-      image: "/person-suit-green.png",
-      date: "June 17, 2025",
-      author: "Admin",
-      category: "Wheelchair Basketball",
-      url: "/news/dan-brooke-named-chair-of-paralympicsgb",
-      sportTags: ["paralympicsgb"],
-    },
-    {
-      id: "fallback-2",
-      title: "Patrick Anderson: The Unstoppable Force of Wheelchair Basketball",
-      excerpt:
-        "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era.",
-      image: "/wheelchair-basketball-action.png",
-      date: "June 17, 2025",
-      author: "Admin",
-      category: "Wheelchair Basketball",
-      url: "/news/patrick-anderson-the-unstoppable-force-of-wheelchair-basketball",
-      sportTags: ["wheelchair-basketball"],
-    },
-    {
-      id: "fallback-3",
-      title: "2025 IPC Classification Code: Raising the Standards for Paralympic Sport",
-      excerpt:
-        "The International Paralympic Committee introduces new classification standards to ensure fair competition across all Paralympic sports.",
-      image: "/paralympic-stadium.png",
-      date: "June 16, 2025",
-      author: "Admin",
-      category: "IPC",
-      url: "/news/2025-ipc-classification-code-raising-the-standards-for-paralympic-sport",
-      sportTags: ["ipc", "classification"],
-    },
-  ]
+// Helper function to normalize category
+function normalizeCategory(category: any): string {
+  console.log("🏷️ Category DEBUG - Raw category:", JSON.stringify(category, null, 2))
+
+  if (!category) {
+    console.log("🏷️ Category DEBUG - No category found, defaulting to 'News'")
+    return "News"
+  }
+
+  // Handle different category structures
+  if (typeof category === "string") {
+    console.log("🏷️ Category DEBUG - Category is string:", category)
+    return category
+  }
+
+  if (category.title) {
+    console.log("🏷️ Category DEBUG - Using category.title:", category.title)
+    return category.title
+  }
+
+  if (category.name) {
+    console.log("🏷️ Category DEBUG - Using category.name:", category.name)
+    return category.name
+  }
+
+  console.log("🏷️ Category DEBUG - Unknown category structure, defaulting to 'News'")
+  return "News"
 }
 
-// Enhanced query with multiple approaches to get categories
-export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
+// Fetch featured articles
+export async function getFeaturedArticlesAsync(): Promise<Article[]> {
   try {
-    console.log("🔍 Fetching articles from Sanity with enhanced category detection...")
+    console.log("🔍 Fetching featured articles from Sanity...")
 
-    // ENHANCED QUERY: Fetch category data in multiple ways to ensure we get it
-    const query = `*[_type == "article" || _type == "post"] | order(publishedAt desc) [0...5] {
+    const query = `*[_type == "post" && defined(slug.current)] | order(publishedAt desc, _createdAt desc) [0...10] {
       _id,
-      _type,
       title,
       slug,
-      publishedAt,
       excerpt,
-      author->{
-        name,
-        _id
-      },
+      publishedAt,
+      _createdAt,
+      "author": author->name,
+      mainImage,
       "category": category,
       "categoryExpanded": category->{
-        _id,
-        _type,
         title,
-        name,
         slug,
         description
-      },
-      featuredImage {
-        asset->{
-          _id,
-          _ref,
-          url
-        },
-        alt,
-        hotspot,
-        crop
-      },
-      thumbnail {
-        asset->{
-          _id,
-          _ref,
-          url
-        },
-        alt,
-        hotspot,
-        crop
-      },
-      image {
-        asset->{
-          _id,
-          _ref,
-          url
-        },
-        alt,
-        hotspot,
-        crop
-      },
-      mainImage {
-        asset->{
-          _id,
-          _ref,
-          url
-        },
-        alt,
-        hotspot,
-        crop
-      },
-      body,
-      featured,
-      sportTags
+      }
     }`
 
     const posts = await client.fetch(query)
+    console.log("✅ Sanity query returned:", posts?.length || 0, "posts")
 
-    console.log("📊 Raw Sanity response:", {
-      count: posts?.length || 0,
-      firstPostDebug: posts?.[0]
-        ? {
-            title: posts[0].title,
-            type: posts[0]._type,
-            category: posts[0].category,
-            categoryExpanded: posts[0].categoryExpanded,
-          }
-        : "No posts",
+    if (!posts || posts.length === 0) {
+      console.log("⚠️ No posts found, returning fallback articles")
+      return getFallbackArticles()
+    }
+
+    const articles: Article[] = posts.map((post: any, index: number) => {
+      console.log(`\n📰 Processing article ${index + 1}:`, post.title)
+      console.log("   Raw publishedAt:", post.publishedAt)
+      console.log("   Raw _createdAt:", post._createdAt)
+      console.log("   Raw category:", post.category)
+      console.log("   Raw categoryExpanded:", post.categoryExpanded)
+
+      const dateToUse = post.publishedAt || post._createdAt
+      const formattedDate = formatDate(dateToUse)
+
+      console.log("   Using date:", dateToUse)
+      console.log("   Formatted date:", formattedDate)
+
+      const category = normalizeCategory(post.categoryExpanded || post.category)
+      console.log("   Final category:", category)
+
+      return {
+        id: post._id,
+        title: post.title || "Untitled Article",
+        excerpt: post.excerpt || "",
+        date: formattedDate,
+        category: category,
+        author: post.author || "DSC Team",
+        image: post.mainImage?.asset?._ref
+          ? `https://cdn.sanity.io/images/${client.config().projectId}/${client.config().dataset}/${post.mainImage.asset._ref.replace("image-", "").replace("-jpg", ".jpg").replace("-png", ".png")}`
+          : "/placeholder.svg",
+        url: `/news/${post.slug.current}`,
+      }
     })
 
-    if (posts && posts.length > 0) {
-      console.log("✅ Processing Sanity posts...")
-      const transformedPosts = posts.map(transformSanityPost)
-      return transformedPosts
-    }
+    console.log("✅ Successfully processed", articles.length, "articles")
+    console.log(
+      "📅 Article dates:",
+      articles.map((a) => ({ title: a.title, date: a.date })),
+    )
+
+    return articles
   } catch (error) {
-    console.error("❌ Error fetching articles from Sanity:", error)
+    console.error("❌ Error fetching featured articles:", error)
+    return getFallbackArticles()
   }
-
-  console.log("⚠️ Using fallback data...")
-  return getFallbackArticles()
 }
 
-export const getLatestArticlesAsync = async (): Promise<Article[]> => {
-  return getFeaturedArticlesAsync() // Use the same enhanced logic
+// Fetch latest articles
+export async function getLatestArticlesAsync(): Promise<Article[]> {
+  // For now, return the same as featured articles
+  return getFeaturedArticlesAsync()
 }
 
-export const getAllArticlesAsync = async (): Promise<Article[]> => {
-  const featured = await getFeaturedArticlesAsync()
-  const latest = await getLatestArticlesAsync()
-
-  // Combine and deduplicate
-  const allArticles = [...featured, ...latest]
-  const uniqueArticles = allArticles.filter(
-    (article, index, self) => index === self.findIndex((a) => a.id === article.id),
-  )
-
-  return uniqueArticles
+// Fetch all articles
+export async function getAllArticlesAsync(): Promise<Article[]> {
+  return getFeaturedArticlesAsync()
 }
 
-// Keep existing functions unchanged
-export const getPodcasts = (): PodcastEpisode[] => {
+// Fallback articles if Sanity query fails
+function getFallbackArticles(): Article[] {
   return [
     {
-      id: 1,
-      title: "The Journey to Paralympic Gold",
-      guest: "Emma Parker",
-      description: "Emma shares her incredible journey from rehabilitation to winning Paralympic gold in Tokyo.",
-      image: "/female-paralympic-athlete.png",
-      duration: "42:15",
-      date: "May 1, 2025",
-      url: "/podcasts/journey-to-gold",
-    },
-  ]
-}
-
-export function getLiveEvents() {
-  return [
-    {
-      id: 1,
-      title: "Wheelchair Basketball: USA vs Canada - Semifinal",
-      category: "Wheelchair Basketball",
-      image: "/wheelchair-basketball-action.png",
-      url: "/live/wheelchair-basketball-usa-canada-semifinal",
-      viewers: "12,458",
-    },
-  ]
-}
-
-export function getUpcomingEvents() {
-  return [
-    {
-      id: 1,
-      title: "Para Swimming World Series - London",
+      id: "1",
+      title: "World Para Swimming Championships 2024",
+      excerpt: "Record-breaking performances highlight the championships in Manchester",
+      date: formatDate(new Date().toISOString()),
       category: "Para Swimming",
+      author: "Sarah Johnson",
       image: "/para-swimming-competition.png",
-      time: "Tomorrow, 14:00 BST",
-      date: "May 5, 2025",
-      url: "/live/para-swimming-world-series-london",
-      viewers: "Starts in 22 hours",
+      url: "/news/world-para-swimming-championships-2024",
     },
-  ]
-}
-
-export const getContentGrid = (category: string): VideoContent[] => {
-  return [
     {
-      id: 1,
-      title: "Para Athletics World Championships Highlights",
-      description: "Best moments from the championships",
-      image: "/para-athletics-track.png",
-      category: "Athletics",
-      duration: "15:30",
-      url: "/watch/para-athletics-highlights",
-      views: "125K",
-      date: "2 days ago",
+      id: "2",
+      title: "Wheelchair Basketball: USA Dominates Semi-Finals",
+      excerpt: "Team USA secures spot in finals with commanding performance",
+      date: formatDate(new Date(Date.now() - 86400000).toISOString()),
+      category: "Wheelchair Basketball",
+      author: "Michael Chen",
+      image: "/wheelchair-basketball-action.png",
+      url: "/news/usa-wheelchair-basketball-semifinals",
     },
-  ]
-}
-
-export const getSportsCategories = () => {
-  return [
-    { name: "Wheelchair Basketball", url: "/sports/wheelchair-basketball" },
-    { name: "Para Athletics", url: "/sports/para-athletics" },
-    { name: "Para Swimming", url: "/sports/para-swimming" },
-    { name: "All Sports", url: "/sports" },
+    {
+      id: "3",
+      title: "Para Athletics: New Records Set in Tokyo",
+      excerpt: "Athletes push boundaries at the International Grand Prix",
+      date: formatDate(new Date(Date.now() - 172800000).toISOString()),
+      category: "Para Athletics",
+      author: "Emma Wilson",
+      image: "/para-athletics-track.png",
+      url: "/news/para-athletics-records-tokyo",
+    },
   ]
 }
