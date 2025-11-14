@@ -5,67 +5,83 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
 import SiteHeader from "@/components/site-header"
 import EnhancedFooter from "@/components/enhanced-footer"
 import Image from "next/image"
-import {
-  Film,
-  Headphones,
-  Clock,
-  Calendar,
-  ChevronRight,
-  Check,
-  Play,
-  Star,
-  TrendingUp,
-  Award,
-  Info,
-  BookmarkPlus,
-} from "lucide-react"
+import { Film, Headphones, Clock, Calendar, ChevronRight, Check, Play, Star, TrendingUp, Award, Info, BookmarkPlus, Download, FileText, Search } from 'lucide-react'
 import Link from "next/link"
 import { motion } from "framer-motion"
+
+interface VimeoVideo {
+  id: string
+  vimeoId: string // Vimeo video ID for API integration
+  title: string
+  description: string
+  thumbnail: string
+  category: string
+  duration: string
+  rating: number
+  isNew?: boolean
+}
+
+interface Magazine {
+  id: string
+  title: string
+  issue: string
+  month: string
+  year: string
+  coverImage: string
+  downloadUrl: string
+  fileSize: string
+  pageCount: number
+}
 
 export default function PremiumContentPage() {
   const [activeCategory, setActiveCategory] = useState("all")
   const [showTrailer, setShowTrailer] = useState(false)
+  const [selectedVideo, setSelectedVideo] = useState<VimeoVideo | null>(null)
   const [featuredIndex, setFeaturedIndex] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Featured content for the hero carousel
-  const featuredContent = [
+  const featuredContent: VimeoVideo[] = [
     {
       id: "road-to-milano",
+      vimeoId: "123456789", // Replace with actual Vimeo video ID
       title: "Road to Milano-Cortina 2026",
       description:
         "Follow the journey of Paralympic athletes as they prepare for the Winter Paralympic Games in Milano-Cortina.",
-      image: "/milano-cortina-2026.png",
+      thumbnail: "/milano-cortina-2026.png",
       category: "Documentaries",
       duration: "52:18",
       rating: 4.9,
-      new: true,
+      isNew: true,
     },
     {
       id: "breaking-barriers",
+      vimeoId: "987654321",
       title: "Breaking Barriers: The Story of Wheelchair Basketball",
       description:
         "An inspiring documentary about the evolution of wheelchair basketball and the athletes who changed the game forever.",
-      image: "/wheelchair-basketball-action.png",
+      thumbnail: "/wheelchair-basketball-action.png",
       category: "Documentaries",
       duration: "1:24:30",
       rating: 4.8,
-      new: false,
+      isNew: false,
     },
     {
       id: "paralympic-journey",
+      vimeoId: "456789012",
       title: "The Journey to Paralympic Gold",
       description:
         "Elite athletes share their personal stories of triumph, determination and the road to Paralympic glory.",
-      image: "/female-paralympic-athlete.png",
+      thumbnail: "/female-paralympic-athlete.png",
       category: "Para Sport Talks",
       duration: "42:15",
       rating: 4.7,
-      new: true,
+      isNew: true,
     },
   ]
 
@@ -109,6 +125,53 @@ export default function PremiumContentPage() {
     },
   ]
 
+  const magazines: Magazine[] = [
+    {
+      id: "mag-2025-05",
+      title: "Paralympic Pulse",
+      issue: "May 2025 Edition",
+      month: "May",
+      year: "2025",
+      coverImage: "/magazine-may-2025.png",
+      downloadUrl: "/api/download/magazine/2025-05", // Will connect to API
+      fileSize: "24.5 MB",
+      pageCount: 68,
+    },
+    {
+      id: "mag-2025-04",
+      title: "Paralympic Pulse",
+      issue: "April 2025 Edition",
+      month: "April",
+      year: "2025",
+      coverImage: "/magazine-april-2025.png",
+      downloadUrl: "/api/download/magazine/2025-04",
+      fileSize: "22.8 MB",
+      pageCount: 64,
+    },
+    {
+      id: "mag-2025-03",
+      title: "Paralympic Pulse",
+      issue: "March 2025 Edition",
+      month: "March",
+      year: "2025",
+      coverImage: "/magazine-march-2025.png",
+      downloadUrl: "/api/download/magazine/2025-03",
+      fileSize: "26.1 MB",
+      pageCount: 72,
+    },
+    {
+      id: "mag-2025-02",
+      title: "Paralympic Pulse",
+      issue: "February 2025 Edition",
+      month: "February",
+      year: "2025",
+      coverImage: "/magazine-feb-2025.png",
+      downloadUrl: "/api/download/magazine/2025-02",
+      fileSize: "23.4 MB",
+      pageCount: 66,
+    },
+  ]
+
   // Auto-rotate featured content
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,6 +188,11 @@ export default function PremiumContentPage() {
   // Handle category change
   const handleCategoryChange = (value: string) => {
     setActiveCategory(value)
+  }
+
+  const openVideoPlayer = (video: VimeoVideo) => {
+    setSelectedVideo(video)
+    setShowTrailer(true)
   }
 
   return (
@@ -148,7 +216,7 @@ export default function PremiumContentPage() {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/70 z-10"></div>
               <Image
-                src={content.image || "/placeholder.svg"}
+                src={content.thumbnail || "/placeholder.svg"}
                 alt={content.title}
                 fill
                 className="object-cover"
@@ -176,7 +244,7 @@ export default function PremiumContentPage() {
                   <Badge className="bg-teal-600 hover:bg-teal-500 px-3 py-1 text-xs font-semibold">
                     {featuredContent[featuredIndex].category}
                   </Badge>
-                  {featuredContent[featuredIndex].new && (
+                  {featuredContent[featuredIndex].isNew && (
                     <Badge className="bg-red-600 hover:bg-red-500 px-3 py-1 text-xs font-semibold">NEW</Badge>
                   )}
                 </div>
@@ -201,9 +269,9 @@ export default function PremiumContentPage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     className="bg-teal-600 hover:bg-teal-500 text-lg px-8 py-6 rounded-full shadow-lg shadow-teal-900/20 hover:shadow-teal-900/30 hover:scale-[1.02] transition-all duration-300 flex items-center gap-2"
-                    onClick={() => setShowTrailer(true)}
+                    onClick={() => openVideoPlayer(featuredContent[featuredIndex])}
                   >
-                    <Play className="h-5 w-5" /> Watch Trailer
+                    <Play className="h-5 w-5" /> Watch Now
                   </Button>
                 </div>
               </motion.div>
@@ -224,14 +292,16 @@ export default function PremiumContentPage() {
             </div>
           </div>
 
-          {/* Trailer Modal */}
-          {showTrailer && (
-            <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-              <div className="relative w-full max-w-4xl aspect-video bg-black">
+          {showTrailer && selectedVideo && (
+            <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+              <div className="relative w-full max-w-6xl">
                 <Button
                   variant="ghost"
                   className="absolute -top-12 right-0 text-white hover:bg-white/10 rounded-full p-2"
-                  onClick={() => setShowTrailer(false)}
+                  onClick={() => {
+                    setShowTrailer(false)
+                    setSelectedVideo(null)
+                  }}
                 >
                   <span className="sr-only">Close</span>
                   <svg
@@ -244,22 +314,141 @@ export default function PremiumContentPage() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="lucide lucide-x"
                   >
                     <path d="M18 6 6 18" />
                     <path d="m6 6 12 12" />
                   </svg>
                 </Button>
-                <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                  <div className="text-center">
-                    <p className="text-xl font-medium mb-4">Trailer would play here</p>
-                    <p className="text-gray-400">This is a placeholder for the trailer video player</p>
+                
+                <div className="w-full aspect-video bg-black rounded-lg overflow-hidden border border-gray-800">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 p-8">
+                    <Film className="h-16 w-16 text-teal-500 mb-4" />
+                    <p className="text-xl font-medium mb-2 text-center">{selectedVideo.title}</p>
+                    <p className="text-gray-400 text-center mb-6">Vimeo Video ID: {selectedVideo.vimeoId}</p>
+                    <div className="bg-gray-800 rounded-lg p-4 max-w-2xl">
+                      <p className="text-sm text-gray-300 mb-2">
+                        <strong>Integration Ready:</strong> Replace the content below with:
+                      </p>
+                      <code className="text-xs text-teal-400 block bg-black p-3 rounded">
+                        {`<iframe
+  src="https://player.vimeo.com/video/${selectedVideo.vimeoId}?autoplay=1"
+  width="100%"
+  height="100%"
+  frameborder="0"
+  allow="autoplay; fullscreen; picture-in-picture"
+  allowfullscreen
+></iframe>`}
+                      </code>
+                    </div>
+                  </div>
+                  {/* When ready, replace above with actual Vimeo embed */}
+                </div>
+
+                <div className="mt-4 bg-gray-900 rounded-lg p-4">
+                  <h3 className="text-lg font-bold mb-2">{selectedVideo.title}</h3>
+                  <p className="text-gray-400 text-sm mb-3">{selectedVideo.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{selectedVideo.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow-500" />
+                      <span>{selectedVideo.rating}/5</span>
+                    </div>
+                    <Badge className="bg-teal-600">{selectedVideo.category}</Badge>
                   </div>
                 </div>
               </div>
             </div>
           )}
         </section>
+
+        <motion.section
+          className="py-16 md:py-24 bg-gradient-to-b from-black to-gray-950"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isLoaded ? 1 : 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <FileText className="h-6 w-6 text-teal-500" />
+                <h2 className="text-2xl md:text-3xl font-bold">Monthly Magazine</h2>
+              </div>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search issues..."
+                  className="pl-10 bg-gray-900 border-gray-800 text-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {magazines.map((magazine, index) => (
+                <motion.div
+                  key={magazine.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 * index }}
+                >
+                  <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 backdrop-blur-sm border border-gray-800/50 hover:border-teal-900/50 transition-all duration-300 overflow-hidden group h-full flex flex-col">
+                    <div className="relative aspect-[3/4] overflow-hidden">
+                      <Image
+                        src={magazine.coverImage || `/placeholder.svg?height=400&width=300&query=Paralympic magazine cover ${magazine.month} ${magazine.year}`}
+                        alt={magazine.issue}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-teal-600 hover:bg-teal-500">New Issue</Badge>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-lg font-bold mb-1">{magazine.title}</h3>
+                        <p className="text-sm text-gray-300">{magazine.issue}</p>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-4 flex-grow">
+                      <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          <span>{magazine.pageCount} pages</span>
+                        </div>
+                        <span className="text-xs">{magazine.fileSize}</span>
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        Exclusive interviews, athlete profiles, and in-depth coverage of Paralympic sports.
+                      </p>
+                    </CardContent>
+
+                    <CardFooter className="p-4 pt-0">
+                      <Button 
+                        className="w-full bg-teal-600 hover:bg-teal-500 flex items-center justify-center gap-2"
+                        asChild
+                      >
+                        <a href={magazine.downloadUrl} download>
+                          <Download className="h-4 w-4" /> Download PDF
+                        </a>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center">
+              <Button variant="outline" className="border-gray-700 hover:bg-gray-800 bg-transparent">
+                View Archive <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </motion.section>
 
         {/* Trending Now Section */}
         <motion.section
@@ -645,188 +834,6 @@ export default function PremiumContentPage() {
         </motion.section>
 
         {/* Subscription Plans with Interactive Elements */}
-        <motion.section
-          className="py-16 md:py-24 bg-gradient-to-b from-gray-950 to-black relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isLoaded ? 1 : 0 }}
-          transition={{ duration: 0.6, delay: 1.2 }}
-        >
-          <div className="absolute inset-0 z-0 pointer-events-none opacity-30">
-            <div className="absolute inset-0 bg-[url('/abstract-geometric-flow.png')] bg-repeat opacity-5"></div>
-          </div>
-
-          <div className="container relative z-10 mx-auto px-4 md:px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Choose Your Subscription Plan</h2>
-              <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-                Get unlimited access to all premium content with our flexible subscription options. All plans include
-                AWS-powered streaming for the best viewing experience.
-              </p>
-
-              {/* Plan comparison toggle */}
-              <div className="flex items-center justify-center mt-8 mb-4">
-                <span className="text-gray-400 mr-3">Monthly</span>
-                <div className="relative inline-block w-14 h-7 rounded-full bg-gray-800 transition-colors duration-200">
-                  <input type="checkbox" id="toggle" className="sr-only peer" />
-                  <label
-                    htmlFor="toggle"
-                    className="absolute cursor-pointer inset-0 rounded-full bg-gray-800 peer-checked:bg-teal-900 transition-colors duration-200"
-                  >
-                    <span className="absolute left-1 top-1 w-5 h-5 rounded-full bg-white transition-transform duration-200 peer-checked:translate-x-7"></span>
-                    <span className="sr-only">Toggle billing period</span>
-                  </label>
-                </div>
-                <span className="text-gray-400 ml-3">
-                  Annual <span className="text-teal-400 text-xs font-bold">SAVE 25%</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <SubscriptionCard
-                  tier="Monthly"
-                  price="£9.99"
-                  period="per month"
-                  features={[
-                    "Full access to all premium content",
-                    "HD streaming on all devices",
-                    "New content added weekly",
-                    "Cancel anytime",
-                  ]}
-                />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <SubscriptionCard
-                  tier="Annual"
-                  price="£89.99"
-                  period="per year"
-                  features={[
-                    "Everything in Monthly plan",
-                    "Save 25% compared to monthly",
-                    "Early access to new releases",
-                    "Offline downloads",
-                  ]}
-                  isHighlighted={true}
-                />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <SubscriptionCard
-                  tier="Premium"
-                  price="£129.99"
-                  period="per year"
-                  features={[
-                    "Everything in Annual plan",
-                    "4K Ultra HD streaming",
-                    "Exclusive behind-the-scenes content",
-                    "Virtual meet & greets with athletes",
-                    "Discounted tickets to DSC events",
-                  ]}
-                />
-              </motion.div>
-            </div>
-
-            {/* Plan comparison button */}
-            <div className="flex justify-center mt-10">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="border-gray-700 hover:bg-gray-800 flex items-center gap-2 bg-transparent"
-                    >
-                      <Info className="h-4 w-4" /> Compare Plans
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="w-80 p-0">
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <h4 className="font-medium mb-2">Plan Comparison</h4>
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-800">
-                            <th className="text-left py-2">Feature</th>
-                            <th className="text-center py-2">Monthly</th>
-                            <th className="text-center py-2">Annual</th>
-                            <th className="text-center py-2">Premium</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td className="py-1">Content Library</td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-1">HD Quality</td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-1">4K Quality</td>
-                            <td className="text-center">-</td>
-                            <td className="text-center">-</td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-1">Offline Downloads</td>
-                            <td className="text-center">-</td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-1">Exclusive Content</td>
-                            <td className="text-center">-</td>
-                            <td className="text-center">-</td>
-                            <td className="text-center">
-                              <Check className="h-4 w-4 mx-auto text-teal-400" />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-        </motion.section>
 
         {/* Testimonials Section */}
         <motion.section
@@ -898,7 +905,6 @@ export default function PremiumContentPage() {
           </div>
         </motion.section>
 
-        {/* AWS Integration Callout with Enhanced UI */}
         <motion.section
           className="py-16 md:py-20 border-t border-gray-800/50"
           initial={{ opacity: 0 }}
@@ -911,30 +917,14 @@ export default function PremiumContentPage() {
                 <div className="md:w-1/2 p-8 md:p-12">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-blue-400"
-                      >
-                        <path d="M2 19V9a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z" />
-                        <path d="M12 12v.01" />
-                        <path d="M8 12v.01" />
-                        <path d="M16 12v.01" />
-                      </svg>
+                      <Film className="text-blue-400" />
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-bold">Powered by AWS</h3>
+                    <h3 className="text-2xl md:text-3xl font-bold">Powered by Vimeo</h3>
                   </div>
                   <p className="text-gray-300 mb-6">
-                    Our premium content is delivered through Amazon Web Services, ensuring high-quality, reliable
-                    streaming with minimal buffering. Enjoy adaptive bitrate streaming that automatically adjusts to
-                    your internet connection for the best possible viewing experience.
+                    Our premium video content is delivered through Vimeo's professional video platform, ensuring 
+                    high-quality, reliable streaming with advanced player controls. Enjoy adaptive bitrate streaming 
+                    that automatically adjusts to your internet connection for the best possible viewing experience.
                   </p>
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-center gap-2">
@@ -947,23 +937,28 @@ export default function PremiumContentPage() {
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-teal-400" />
-                      <span>Ultra-low latency for live events</span>
+                      <span>4K HDR support</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-5 w-5 text-teal-400" />
+                      <span>Advanced player customization</span>
                     </li>
                   </ul>
-                  <Button className="bg-blue-600 hover:bg-blue-500 flex items-center gap-2">
-                    Learn more about our technology
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
+                  <div className="bg-gray-800 rounded-lg p-4">
+                    <p className="text-sm text-gray-400 mb-2"><strong>For Developers:</strong></p>
+                    <p className="text-xs text-gray-400">
+                      Videos are embedded using Vimeo's Player API. Connect your Vimeo account and update video IDs 
+                      in the content configuration to integrate your library.
+                    </p>
+                  </div>
                 </div>
                 <div className="md:w-1/2 bg-gradient-to-br from-blue-900/20 to-gray-900 flex items-center justify-center p-8">
-                  <div className="relative w-full max-w-xs aspect-square">
-                    <Image
-                      src="/placeholder.svg?key=kyr8u"
-                      alt="AWS Cloud Technology"
-                      width={300}
-                      height={300}
-                      className="object-contain"
-                    />
+                  <div className="text-center">
+                    <svg viewBox="0 0 24 24" className="w-32 h-32 mx-auto mb-4" fill="currentColor">
+                      <path d="M23.977 6.416c-.105 2.338-1.739 5.543-4.894 9.609-3.268 4.247-6.026 6.37-8.29 6.37-1.409 0-2.578-1.294-3.553-3.881L5.322 11.4C4.603 8.816 3.834 7.522 3.01 7.522c-.179 0-.806.378-1.881 1.132L0 7.197c1.185-1.044 2.351-2.084 3.501-3.128C5.08 2.701 6.266 1.984 7.055 1.91c1.867-.18 3.016 1.1 3.447 3.838.465 2.953.789 4.789.971 5.507.539 2.45 1.131 3.674 1.776 3.674.502 0 1.256-.796 2.265-2.385 1.004-1.589 1.54-2.797 1.612-3.628.144-1.371-.395-2.061-1.614-2.061-.574 0-1.167.121-1.777.391 1.186-3.868 3.434-5.757 6.762-5.637 2.473.06 3.628 1.664 3.493 4.797l-.013.01z"/>
+                    </svg>
+                    <p className="text-2xl font-bold text-blue-400">Vimeo Professional</p>
+                    <p className="text-gray-400 mt-2">High-quality video hosting</p>
                   </div>
                 </div>
               </div>
@@ -991,7 +986,7 @@ export default function PremiumContentPage() {
                 className="border-gray-700 hover:bg-gray-800 text-lg px-8 py-6 rounded-full bg-transparent"
                 asChild
               >
-                <Link href="#subscription-plans">View Plans</Link>
+                <Link href="/membership-plans">View Plans</Link>
               </Button>
             </div>
           </div>

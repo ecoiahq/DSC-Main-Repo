@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams, useRouter } from 'next/navigation'
 import Image from "next/image"
 import Link from "next/link"
-import { Check, ChevronLeft, Info, X } from "lucide-react"
+import { Check, ChevronLeft, Info, X } from 'lucide-react'
 import { motion, AnimatePresence } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
@@ -247,7 +247,7 @@ export default function MembershipPlans() {
                     whileTap={{ scale: 0.95 }}
                     className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                       billingCycle === "monthly"
-                        ? "bg-teal-600 text-white shadow-lg shadow-teal-900/20"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
                         : "text-gray-300 hover:text-white"
                     }`}
                     onClick={() => setBillingCycle("monthly")}
@@ -259,7 +259,7 @@ export default function MembershipPlans() {
                     whileTap={{ scale: 0.95 }}
                     className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                       billingCycle === "annual"
-                        ? "bg-teal-600 text-white shadow-lg shadow-teal-900/20"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
                         : "text-gray-300 hover:text-white"
                     }`}
                     onClick={() => setBillingCycle("annual")}
@@ -281,20 +281,20 @@ export default function MembershipPlans() {
                       variants={fadeIn}
                       whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
                       className={`${
-                        plan.popular ? "border-2 border-teal-500/70 -mt-4 mb-4" : "border border-gray-800/50"
-                      } bg-gradient-to-br from-gray-900 to-gray-900/50 backdrop-blur-sm rounded-xl p-8 transition-all duration-300 hover:border-teal-500/50 flex flex-col h-full relative`}
+                        plan.popular ? "border-2 border-blue-500/70 -mt-4 mb-4" : "border border-gray-800/50"
+                      } bg-gradient-to-br from-gray-900 to-gray-900/50 backdrop-blur-sm rounded-xl p-8 transition-all duration-300 hover:border-blue-500/50 flex flex-col h-full relative`}
                     >
                       <div className="flex-1">
                         {plan.popular && (
                           <motion.div
                             animate={pulseAnimation}
-                            className="bg-teal-600 text-white text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full inline-block mb-4 shadow-lg shadow-teal-900/20"
+                            className="bg-blue-600 text-white text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full inline-block mb-4 shadow-lg shadow-blue-900/20"
                           >
                             Most Popular
                           </motion.div>
                         )}
 
-                        <h3 className="text-xl font-bold text-teal-400 mb-2">{plan.name}</h3>
+                        <h3 className="text-xl font-bold text-blue-600 mb-2">{plan.name}</h3>
                         <div className="flex items-baseline mb-2">
                           <span className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                             {plan.price}
@@ -307,8 +307,8 @@ export default function MembershipPlans() {
                         <ul className="space-y-4 mb-8">
                           {plan.features.map((feature, idx) => (
                             <li key={idx} className="flex items-start">
-                              <div className="mr-3 mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-teal-900/30 flex items-center justify-center">
-                                <Check className="h-3 w-3 text-teal-400" />
+                              <div className="mr-3 mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-blue-900/30 flex items-center justify-center">
+                                <Check className="h-3 w-3 text-blue-600" />
                               </div>
                               <span className="text-gray-300">
                                 {feature.name}
@@ -335,8 +335,8 @@ export default function MembershipPlans() {
                           <Button
                             className={`w-full ${
                               plan.popular
-                                ? "bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-900/20"
-                                : "bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50"
+                                ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 text-white"
+                                : "bg-white hover:bg-gray-50 text-blue-600 hover:text-blue-700 border border-gray-200"
                             } rounded-full py-3 transition-all duration-300`}
                             onClick={() => handlePlanSelection(plan.id)}
                           >
@@ -349,7 +349,7 @@ export default function MembershipPlans() {
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="absolute -top-2 -right-2 bg-teal-500 rounded-full p-1"
+                          className="absolute -top-2 -right-2 bg-blue-500 rounded-full p-1"
                         >
                           <Check className="h-4 w-4 text-white" />
                         </motion.div>
@@ -368,7 +368,7 @@ export default function MembershipPlans() {
               >
                 <Button
                   variant="outline"
-                  className="border-gray-700 text-gray-300 hover:text-white hover:border-teal-500/50"
+                  className="border-gray-200 text-blue-600 hover:text-blue-700 hover:border-blue-600"
                   onClick={() => setShowComparison(!showComparison)}
                 >
                   {showComparison ? "Hide Comparison" : "Compare All Plans"}
@@ -387,7 +387,7 @@ export default function MembershipPlans() {
                   >
                     <div className="bg-gradient-to-br from-gray-900 to-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-xl p-8 md:p-10">
                       <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-2xl font-bold">Compare Plan Features</h3>
+                        <h3 className="text-2xl font-bold text-blue-600">Compare Plan Features</h3>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -403,46 +403,46 @@ export default function MembershipPlans() {
                           <thead>
                             <tr className="border-b border-gray-800">
                               <th className="text-left py-4 pr-4 font-medium text-gray-400">Feature</th>
-                              <th className="text-center py-4 px-4 font-medium text-gray-400">Basic</th>
-                              <th className="text-center py-4 px-4 font-medium text-teal-400">Standard</th>
-                              <th className="text-center py-4 px-4 font-medium text-gray-400">Premium</th>
+                              <th className="text-center py-4 px-4 font-medium text-blue-600">Basic</th>
+                              <th className="text-center py-4 px-4 font-medium text-blue-600">Standard</th>
+                              <th className="text-center py-4 px-4 font-medium text-blue-600">Premium</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr className="border-b border-gray-800/50">
                               <td className="py-4 pr-4 text-gray-300">Monthly Price</td>
                               <td className="text-center py-4 px-4">£4.99</td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">£8.99</td>
+                              <td className="text-center py-4 px-4 bg-blue-900/10">£8.99</td>
                               <td className="text-center py-4 px-4">£12.99</td>
                             </tr>
                             <tr className="border-b border-gray-800/50">
                               <td className="py-4 pr-4 text-gray-300">Annual Price</td>
                               <td className="text-center py-4 px-4">£49.99</td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">£89.99</td>
+                              <td className="text-center py-4 px-4 bg-blue-900/10">£89.99</td>
                               <td className="text-center py-4 px-4">£129.99</td>
                             </tr>
                             <tr className="border-b border-gray-800/50">
                               <td className="py-4 pr-4 text-gray-300">Video Quality</td>
                               <td className="text-center py-4 px-4">HD</td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">Full HD</td>
+                              <td className="text-center py-4 px-4 bg-blue-900/10">Full HD</td>
                               <td className="text-center py-4 px-4">4K Ultra HD</td>
                             </tr>
                             <tr className="border-b border-gray-800/50">
                               <td className="py-4 pr-4 text-gray-300">Simultaneous Streams</td>
                               <td className="text-center py-4 px-4">1</td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">2</td>
+                              <td className="text-center py-4 px-4 bg-blue-900/10">2</td>
                               <td className="text-center py-4 px-4">4</td>
                             </tr>
                             <tr className="border-b border-gray-800/50">
                               <td className="py-4 pr-4 text-gray-300">Para Sport Talks</td>
                               <td className="text-center py-4 px-4">Limited</td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">Full Access</td>
+                              <td className="text-center py-4 px-4 bg-blue-900/10">Full Access</td>
                               <td className="text-center py-4 px-4">Full Access</td>
                             </tr>
                             <tr className="border-b border-gray-800/50">
                               <td className="py-4 pr-4 text-gray-300">Documentaries</td>
                               <td className="text-center py-4 px-4">Limited</td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">Full Access</td>
+                              <td className="text-center py-4 px-4 bg-blue-900/10">Full Access</td>
                               <td className="text-center py-4 px-4">Full Access</td>
                             </tr>
                             <tr className="border-b border-gray-800/50">
@@ -462,11 +462,11 @@ export default function MembershipPlans() {
                                   />
                                 </svg>
                               </td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">
-                                <Check className="h-5 w-5 text-teal-400 mx-auto" />
+                              <td className="text-center py-4 px-4 bg-blue-900/10">
+                                <Check className="h-5 w-5 text-blue-600 mx-auto" />
                               </td>
                               <td className="text-center py-4 px-4">
-                                <Check className="h-5 w-5 text-teal-400 mx-auto" />
+                                <Check className="h-5 w-5 text-blue-600 mx-auto" />
                               </td>
                             </tr>
                             <tr>
@@ -486,7 +486,7 @@ export default function MembershipPlans() {
                                   />
                                 </svg>
                               </td>
-                              <td className="text-center py-4 px-4 bg-teal-900/10">
+                              <td className="text-center py-4 px-4 bg-blue-900/10">
                                 <svg
                                   className="h-5 w-5 text-gray-600 mx-auto"
                                   fill="none"
@@ -502,7 +502,7 @@ export default function MembershipPlans() {
                                 </svg>
                               </td>
                               <td className="text-center py-4 px-4">
-                                <Check className="h-5 w-5 text-teal-400 mx-auto" />
+                                <Check className="h-5 w-5 text-blue-600 mx-auto" />
                               </td>
                             </tr>
                           </tbody>
@@ -520,11 +520,11 @@ export default function MembershipPlans() {
                 transition={{ delay: 0.7, duration: 0.6 }}
                 className="mt-16"
               >
-                <h3 className="text-2xl font-bold mb-6">Frequently Asked Questions</h3>
+                <h3 className="text-2xl font-bold text-blue-600 mb-6">Frequently Asked Questions</h3>
 
                 <Accordion type="single" collapsible className="space-y-4">
                   <AccordionItem value="item-1" className="bg-gray-900/50 border border-gray-800/50 rounded-lg">
-                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-teal-400">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-blue-600">
                       When will I be charged?
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-4 text-gray-300">
@@ -534,7 +534,7 @@ export default function MembershipPlans() {
                   </AccordionItem>
 
                   <AccordionItem value="item-2" className="bg-gray-900/50 border border-gray-800/50 rounded-lg">
-                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-teal-400">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-blue-600">
                       Can I cancel anytime?
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-4 text-gray-300">
@@ -545,7 +545,7 @@ export default function MembershipPlans() {
                   </AccordionItem>
 
                   <AccordionItem value="item-3" className="bg-gray-900/50 border border-gray-800/50 rounded-lg">
-                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-teal-400">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-blue-600">
                       What devices can I watch on?
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-4 text-gray-300">
@@ -556,7 +556,7 @@ export default function MembershipPlans() {
                   </AccordionItem>
 
                   <AccordionItem value="item-4" className="bg-gray-900/50 border border-gray-800/50 rounded-lg">
-                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-teal-400">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-blue-600">
                       How do I access my membership content?
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-4 text-gray-300">
@@ -566,7 +566,7 @@ export default function MembershipPlans() {
                   </AccordionItem>
 
                   <AccordionItem value="item-5" className="bg-gray-900/50 border border-gray-800/50 rounded-lg">
-                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-teal-400">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-medium hover:text-blue-600">
                       Can I upgrade or downgrade my plan?
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-4 text-gray-300">
@@ -578,6 +578,30 @@ export default function MembershipPlans() {
                 </Accordion>
               </motion.div>
 
+              {/* Testing Mode Button */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.75, duration: 0.6 }}
+                className="mt-8 p-6 bg-yellow-900/20 border-2 border-yellow-600/50 rounded-lg"
+              >
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-yellow-500 mb-2">Testing Mode</h4>
+                    <p className="text-sm text-gray-300 mb-4">
+                      Want to preview the premium content page without subscribing? Click the button below to see what subscribers have access to.
+                    </p>
+                    <Button
+                      className="bg-yellow-600 hover:bg-yellow-500 text-black font-semibold rounded-full"
+                      onClick={() => router.push('/premium-content')}
+                    >
+                      Preview Premium Content
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -585,7 +609,7 @@ export default function MembershipPlans() {
                 className="mt-12 text-center"
               >
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="ghost" className="text-gray-400 hover:text-white" asChild>
+                  <Button variant="ghost" className="text-blue-600 hover:text-blue-700" asChild>
                     <Link href="/">
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back to Home
