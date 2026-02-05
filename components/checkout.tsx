@@ -1,16 +1,14 @@
 "use client"
 
-import { useCallback, useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 
 import { startCheckoutSession } from "@/app/actions/stripe"
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 interface CheckoutProps {
   productId: string
@@ -21,7 +19,22 @@ export default function Checkout({ productId, onComplete }: CheckoutProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Only load Stripe if the publishable key is available
+  const stripePromise = useMemo(() => {
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    if (!key) {
+      return null
+    }
+    return loadStripe(key)
+  }, [])
+
   useEffect(() => {
+    // Check if Stripe is configured
+    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+      setError("Stripe is not configured. Please add the Stripe integration from the Connect section in the sidebar.")
+      return
+    }
+
     const fetchClientSecret = async () => {
       try {
         const secret = await startCheckoutSession(productId)
@@ -39,13 +52,14 @@ export default function Checkout({ productId, onComplete }: CheckoutProps) {
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-destructive text-sm">{error}</p>
+      <div className="text-center py-8 px-4">
+        <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">{error}</p>
       </div>
     )
   }
 
-  if (!clientSecret) {
+  if (!clientSecret || !stripePromise) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
