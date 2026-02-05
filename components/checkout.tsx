@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js"
-import { loadStripe } from "@stripe/stripe-js"
+import { loadStripe, type Stripe } from "@stripe/stripe-js"
 import { Loader2, AlertCircle } from "lucide-react"
 
 import { startCheckoutSession } from "@/app/actions/stripe"
@@ -18,33 +18,46 @@ interface CheckoutProps {
 export default function Checkout({ productId, onComplete }: CheckoutProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null)
+  const isMounted = useRef(false)
 
-  // Only load Stripe if the publishable key is available
-  const stripePromise = useMemo(() => {
+  // Initialize Stripe after component mounts
+  useEffect(() => {
+    isMounted.current = true
+    
     const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
     if (!key) {
-      return null
+      setError("Stripe is not configured. Please add the Stripe integration from the Connect section in the sidebar.")
+      return
     }
-    return loadStripe(key)
+    
+    setStripePromise(loadStripe(key))
+
+    return () => {
+      isMounted.current = false
+    }
   }, [])
 
   useEffect(() => {
     // Check if Stripe is configured
     if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      setError("Stripe is not configured. Please add the Stripe integration from the Connect section in the sidebar.")
       return
     }
 
     const fetchClientSecret = async () => {
       try {
         const secret = await startCheckoutSession(productId)
-        if (secret) {
-          setClientSecret(secret)
-        } else {
-          setError("Failed to create checkout session")
+        if (isMounted.current) {
+          if (secret) {
+            setClientSecret(secret)
+          } else {
+            setError("Failed to create checkout session")
+          }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong")
+        if (isMounted.current) {
+          setError(err instanceof Error ? err.message : "Something went wrong")
+        }
       }
     }
     fetchClientSecret()
