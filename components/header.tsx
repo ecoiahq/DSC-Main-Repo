@@ -1,13 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { ShieldCheck, Info, X, Check, AlertTriangle, Target, Users, Heart } from "lucide-react"
+import { ShieldCheck, Info, X, Check, AlertTriangle, Target, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Checkout from "./checkout"
 
 export function Header() {
   const [showAbout, setShowAbout] = useState(false)
-  const [showDonate, setShowDonate] = useState(false)
 
   return (
     <>
@@ -30,48 +28,9 @@ export function Header() {
               <Info className="w-3.5 h-3.5" />
               About
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDonate(true)}
-              className="text-xs text-muted-foreground hover:text-foreground h-8 px-3 gap-1.5 hover:bg-secondary/50 transition-colors"
-            >
-              <Heart className="w-3.5 h-3.5" />
-              Donate
-            </Button>
           </div>
         </div>
       </header>
-
-      {/* Donate Modal */}
-      {showDonate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-background/90 backdrop-blur-md"
-            onClick={() => setShowDonate(false)}
-          />
-          <div className="relative bg-card border border-border/60 rounded-xl w-full max-w-lg max-h-[90vh] overflow-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="sticky top-0 bg-card/95 backdrop-blur-sm border-b border-border/50 p-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-foreground" />
-                <h3 className="font-semibold text-foreground">Support Auxx Intelligence</h3>
-              </div>
-              <button
-                onClick={() => setShowDonate(false)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors group"
-              >
-                <X className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </button>
-            </div>
-            <div className="p-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Help us keep building tools for independent artists. Your support keeps this project free and growing.
-              </p>
-              <Checkout productId="donation" onComplete={() => setShowDonate(false)} />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* About Modal */}
       {showAbout && (
